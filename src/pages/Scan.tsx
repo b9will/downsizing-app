@@ -14,7 +14,7 @@ import { type SizeClass, type Tag } from '../lib/types'
 type Match = Awaited<ReturnType<typeof identifyItems>>[number]
 type Tracked = Match & { key: string; seen: number }
 
-const HOLD_MS = 1500 // keep a box on screen this long after it drops out, so it can still be tapped
+const HOLD_MS = 2500 // keep a box on screen this long after it drops out, so it can still be tapped
 const iou = (a: number[], b: number[]) => {
   const x1 = Math.max(a[0], b[0]), y1 = Math.max(a[1], b[1]), x2 = Math.min(a[0] + a[2], b[0] + b[2]), y2 = Math.min(a[1] + a[3], b[1] + b[3])
   const inter = Math.max(0, x2 - x1) * Math.max(0, y2 - y1)
@@ -46,7 +46,7 @@ export default function Scan() {
   const count = useStore(() => (job && room ? store.listItems(job.id, room.id).length : 0))
 
   const [draft, setDraft] = useState<Draft | null>(null)
-  const { video, state } = useCamera(!draft)
+  const { video, state, canWide, wideOn, toggleWide } = useCamera(!draft)
   const [live, setLive] = useState<Tracked[]>([])
   const [flash, setFlash] = useState(false)
   const [saved, setSaved] = useState<{ id: string; name: string } | null>(null)
@@ -160,15 +160,15 @@ export default function Scan() {
       {/* Live boxes */}
       <AnimatePresence>
         {!draft && live.map((m) => {
-          const stale = Date.now() - m.seen > 400
           return (
           <motion.button
             key={m.key}
             type="button" aria-label={`Select ${m.name}`} onClick={() => shutter(m)}
-            initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: stale ? 0.6 : 1, scale: 1, left: `${m.bounds[0] * 100}%`, top: `${m.bounds[1] * 100}%`, width: `${m.bounds[2] * 100}%`, height: `${m.bounds[3] * 100}%` }} exit={{ opacity: 0, transition: { duration: 0.3 } }} transition={{ duration: 0.25, ease: 'easeOut' }}
-            className={`absolute rounded-xl border-[3px] ${m.centered ? 'border-white shadow-[0_0_0_4px_rgba(255,255,255,0.25)]' : 'border-white/70'}`}
+            initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1, left: `${m.bounds[0] * 100}%`, top: `${m.bounds[1] * 100}%`, width: `${m.bounds[2] * 100}%`, height: `${m.bounds[3] * 100}%` }} exit={{ opacity: 0, transition: { duration: 0.45 } }} transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+            className={`absolute rounded-[22px] ${m.centered ? 'bg-white/20 shadow-[inset_0_0_0_2px_rgba(255,255,255,0.95),0_0_32px_rgba(255,255,255,0.35)]' : 'bg-white/10 shadow-[inset_0_0_0_1.5px_rgba(255,255,255,0.75)]'}`}
           >
-            <span className="absolute -top-3.5 left-2 px-2.5 py-0.5 rounded-full bg-white text-ink text-[15px] font-semibold shadow">{m.name}</span>
+            {(['left-0 top-0 border-l-4 border-t-4 rounded-tl-[22px]', 'right-0 top-0 border-r-4 border-t-4 rounded-tr-[22px]', 'left-0 bottom-0 border-l-4 border-b-4 rounded-bl-[22px]', 'right-0 bottom-0 border-r-4 border-b-4 rounded-br-[22px]'] as const).map((c) => <span key={c} aria-hidden className={`absolute w-7 h-7 border-white ${c}`} />)}
+            <span className="absolute left-1/2 -translate-x-1/2 -bottom-4 px-3.5 py-1 rounded-full bg-white text-ink text-[15px] font-semibold shadow-lg whitespace-nowrap">{m.name}</span>
           </motion.button>
         )})}
       </AnimatePresence>
@@ -180,7 +180,7 @@ export default function Scan() {
           <div className="text-[15px] font-semibold">{room.name}</div>
           <div className="text-[13px] text-white/70">{count} tagged</div>
         </div>
-        <div className="w-11 h-11 rounded-full bg-white/15 backdrop-blur flex items-center justify-center" aria-hidden><Zap size={18} className={state === 'live' && modelReady ? 'text-green-300' : 'text-white/50'} /></div>
+        {canWide ? <button onClick={toggleWide} aria-label={wideOn ? 'Switch to normal lens' : 'Switch to wide lens'} className="w-11 h-11 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-[14px] font-bold">{wideOn ? '0.5×' : '1×'}</button> : <div className="w-11 h-11 rounded-full bg-white/15 backdrop-blur flex items-center justify-center" aria-hidden><Zap size={18} className={state === 'live' && modelReady ? 'text-green-300' : 'text-white/50'} /></div>}
       </div>
 
       {/* Bottom controls */}

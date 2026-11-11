@@ -41,7 +41,7 @@ export default function QuickScan() {
   const job = useStore(() => store.getJob())
   const room = useStore(() => (job ? store.listRooms(job.id).find((r) => r.id === roomId) : undefined))
   const [phase, setPhase] = useState<Phase>('intro')
-  const { video, state } = useCamera(phase === 'intro' || phase === 'scan')
+  const { video, state, canWide, wideOn, toggleWide } = useCamera(phase === 'intro' || phase === 'scan', { preferWide: true })
   const frames = useRef<string[]>([])
   const sectors = useRef<Set<number>>(new Set())
   const heading = useRef<number | null>(null)
@@ -133,7 +133,7 @@ export default function QuickScan() {
         <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-[calc(var(--spacing-safe-t)+10px)] pb-8 bg-gradient-to-b from-black/60 to-transparent">
           <button aria-label="Close" onClick={() => nav(`/rooms/${room.id}`)} className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center"><X size={22} /></button>
           <span className="text-[18px] font-semibold" style={{ fontFamily: 'var(--font-display)' }}>{room.name}</span>
-          <span className="w-11" />
+          {canWide ? <button onClick={toggleWide} aria-label={wideOn ? 'Switch to normal lens' : 'Switch to wide lens'} className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center text-[14px] font-bold">{wideOn ? '0.5×' : '1×'}</button> : <span className="w-11" />}
         </div>
         <div className="absolute inset-x-0 bottom-0 px-5 pb-[calc(var(--spacing-safe-b)+24px)] pt-16 bg-gradient-to-t from-black/80 to-transparent flex flex-col items-center gap-4 text-center">
           {phase === 'intro' ? (
