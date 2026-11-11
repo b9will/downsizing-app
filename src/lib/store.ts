@@ -64,7 +64,8 @@ class CloudStore {
     const { data } = await sb.auth.getSession()
     const session = data.session
     if (!session) { this.clear(); return }
-    if (this.db.user?.id === session.user.id) { this.ready = true; this.emit() } // show cache instantly
+    // Show the cache instantly, but only once we know their home. Otherwise wait, so a returning person never lands on the first-time setup page.
+    if (this.db.user?.id === session.user.id) { if (this.db.job || this.db.user.role !== 'client') { this.ready = true; this.emit() } }
     else this.db = { user: null, job: null, jobs: [], rooms: [], items: [] }
     try { await this.refresh(session.user) } catch (e) { this.lastError = String(e) }
     this.ready = true; this.emit()

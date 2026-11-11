@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { isStaff } from '../lib/types'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronRight, HardHat, Home, HeartHandshake, Landmark, KeyRound } from 'lucide-react'
 import { Page } from '../components/ui'
 import { useStore } from '../lib/hooks'
@@ -16,7 +17,12 @@ export default function Start() {
   const [code, setCode] = useState(params.get('code') ?? '')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
+  const job = useStore(() => store.getJob())
+  const [hadJob] = useState(() => !!store.getJob())
   if (!user) return null
+  // Setup is a one-time step. Anyone who already has a home goes straight to their dashboard.
+  if (isStaff(user)) return <Navigate to="/crew" replace />
+  if (job && hadJob && !params.get('code')) return <Navigate to="/" replace />
 
   const start = (m: JobMode) => {
     if (m !== 'self' && !whose.trim()) return setErr(m === 'estate' ? 'Whose estate is it?' : 'Whose home is it?')
