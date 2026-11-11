@@ -104,10 +104,18 @@ export interface Item {
   prep?: string
   /** What happens to what's inside a container. */
   contents?: Contents
+  /** How many identical pieces this entry covers (a set of 4 dining chairs = 4). */
+  qty?: number
   source?: 'manual' | 'quickscan' | 'sticker'
   createdAt: string
   updatedAt: string
 }
+/** Things that usually come in matching sets, so we ask how many. */
+const SET_RE = /chair|stool|side table|end table|night ?stand|bedside|lamp|speaker|bench|ottoman|cushion|pillow|bookcase|bookshel|shelf|shelving|bin\b|bins|tote|planter|pot\b|suitcase|luggage|mirror|frame|sconce|curtain|blind|tire|tyre|monitor|filing cabinet|locker|crate|box/i
+export const isSetLike = (name: string) => SET_RE.test(name)
+/** "Dining chair" or "Dining chair, set of 4". */
+export const itemLabel = (i: { name: string; qty?: number }) => ((i.qty ?? 1) > 1 ? `${i.name}, set of ${i.qty}` : i.name)
+
 export interface ItemEvent { id: string; itemId: string; status: string; note?: string; photo?: string; byLabel?: string; at: string }
 
 export interface Quote {

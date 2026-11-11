@@ -66,7 +66,7 @@ export default function CrewStop() {
               <div className="flex gap-3">
                 <div className="w-20 h-20 rounded-lg bg-surface-2 overflow-hidden shrink-0">{i.photo && <img src={i.photo} alt="" className="w-full h-full object-cover" />}</div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-[17px] leading-tight">{i.sticker && <span className="tabular-nums">#{i.sticker} </span>}{i.name}</div>
+                  <div className="font-semibold text-[17px] leading-tight">{i.sticker && <span className="tabular-nums">#{i.sticker} </span>}{i.name}{(i.qty ?? 1) > 1 && <span className="ml-2 px-2 py-0.5 rounded-full bg-ink text-white text-[13px] align-middle">×{i.qty}</span>}</div>
                   <div className="text-ink-2 text-[15px]">{room(i.roomId)} · {i.size}{i.familyRecipient ? ` · for ${i.familyRecipient}` : ''}</div>
                   {i.note && <div className="text-[15px] mt-0.5">{i.note}</div>}
                   <div className={`text-[14px] font-semibold mt-1 ${bad ? 'text-danger' : i.status === done ? 'text-accent' : 'text-ink-2'}`}>{LABEL[i.status]}{i.statusNote ? `: ${i.statusNote}` : ''}</div>

@@ -92,6 +92,27 @@ export function Toast({ show, text, onUndo }: { show: boolean; text: string; onU
   )
 }
 
+/** "Is this a set?" Shown for things that usually come in multiples. */
+export function SetPicker({ name, value, onChange }: { name: string; value: number; onChange: (n: number) => void }) {
+  const opts = [1, 2, 4, 6, 8]
+  const custom = !opts.includes(value)
+  const chip = (on: boolean) => `h-12 min-w-12 px-4 rounded-full font-semibold text-[16px] ${on ? 'bg-ink text-white' : 'bg-surface-2 text-ink'}`
+  return (
+    <div>
+      <div className="sec mb-2">Is this a set?</div>
+      <div className="flex flex-wrap items-center gap-2" role="group" aria-label={`How many of ${name || 'this item'}`}>
+        {opts.map((n) => <button key={n} type="button" aria-pressed={value === n} className={chip(value === n)} onClick={() => onChange(n)}>{n === 1 ? 'Just one' : n}</button>)}
+        <span className={`flex items-center rounded-full ${custom ? 'bg-ink text-white' : 'bg-surface-2'}`}>
+          <button type="button" aria-label="One fewer" className="w-11 h-12 text-[22px] font-semibold" onClick={() => onChange(Math.max(1, value - 1))}>−</button>
+          <span className="min-w-6 text-center font-semibold tabular-nums" aria-live="polite">{value}</span>
+          <button type="button" aria-label="One more" className="w-11 h-12 text-[22px] font-semibold" onClick={() => onChange(Math.min(99, value + 1))}>+</button>
+        </span>
+      </div>
+      {value > 1 && <p className="text-ink-2 text-[14px] mt-1.5">Set of {value}. They stay together and go to the same place.</p>}
+    </div>
+  )
+}
+
 export function Segmented<T extends string>({ options, value, onChange }: { options: Array<[T, string]>; value: T; onChange: (v: T) => void }) {
   return (
     <div className="grid gap-1 p-1 rounded-xl bg-surface-2" style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }} role="radiogroup">

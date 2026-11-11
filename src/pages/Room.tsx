@@ -40,7 +40,7 @@ export default function Room() {
             <Link key={i.id} to={`/items/${i.id}`} className="bg-soft rounded-[18px] overflow-hidden relative">
               <div className="aspect-square bg-surface-2">{i.photo && <img src={i.photo} alt="" className="w-full h-full object-cover" />}</div>
               <div className="p-2">
-                <div className="font-semibold text-[14px] truncate">{i.name}</div>
+                <div className="font-semibold text-[14px] truncate">{i.name}{(i.qty ?? 1) > 1 ? ` ×${i.qty}` : ''}</div>
                 <span className="absolute right-1.5 top-1.5"><Dot tag={i.tag} size={28} /></span>
               </div>
             </Link>

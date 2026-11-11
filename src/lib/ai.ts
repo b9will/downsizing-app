@@ -85,7 +85,7 @@ export const localAI: AIProvider = {
 
   estimateQuote(job, items) {
     const by = (t: Tag) => items.filter((i) => i.tag === t)
-    const units = (list: Item[]) => list.reduce((s, i) => s + SIZE_UNITS[i.size], 0)
+    const units = (list: Item[]) => list.reduce((s, i) => s + SIZE_UNITS[i.size] * (i.qty ?? 1), 0)
 
     const moveUnits = units(by('move')) + units(by('family'))
     const storeUnits = units(by('store'))

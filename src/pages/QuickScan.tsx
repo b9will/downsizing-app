@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Check, ChevronLeft, X } from 'lucide-react'
-import { Dot, Segmented, TagChips } from '../components/ui'
+import { Dot, Segmented, SetPicker, TagChips } from '../components/ui'
 import { snapshot, useCamera } from '../lib/camera'
 import { useStore } from '../lib/hooks'
 import { now, store, uid } from '../lib/store'
 import { sb } from '../lib/supabase'
-import { type Contents, type SizeClass, type Tag } from '../lib/types'
+import { isSetLike, type Contents, type SizeClass, type Tag } from '../lib/types'
 
 // Room quick scan: turn slowly, we photograph the whole room, the AI lists what is in it,
 // then one card per item: where does it go, and what about what's inside.
-type Found = { name: string; description: string; size: SizeClass; container: boolean; contents_visible: string; prep: string; frame: number; box: number[]; confidence: number; photo: string }
+type Found = { name: string; description: string; size: SizeClass; container: boolean; count?: number; contents_visible: string; prep: string; frame: number; box: number[]; confidence: number; photo: string }
 type Phase = 'intro' | 'scan' | 'working' | 'review' | 'done' | 'error'
 
 const SECTORS = 12 // 30 degrees each
@@ -115,7 +115,7 @@ export default function QuickScan() {
   const saveAll = (list: Found[]) => {
     list.forEach((f) => store.saveItem({
       id: uid(), jobId: job.id, roomId: room.id, name: f.name.trim() || 'Item', size: f.size, tag: 'undecided', photo: f.photo,
-      description: f.description || undefined, prep: f.prep || undefined, source: 'quickscan', status: 'tagged', createdAt: now(), updatedAt: now(),
+      description: f.description || undefined, prep: f.prep || undefined, qty: f.count && f.count > 1 ? f.count : undefined, source: 'quickscan', status: 'tagged', createdAt: now(), updatedAt: now(),
     }))
     setSaved((s) => ({ ...s, undecided: (s.undecided ?? 0) + list.length }))
     setFound([]); setPhase('done')
@@ -127,7 +127,7 @@ export default function QuickScan() {
   const save = (t: Tag, contents?: Contents) => {
     store.saveItem({
       id: uid(), jobId: job.id, roomId: room.id, name: cur.name.trim() || 'Item', size: cur.size, tag: t, photo: cur.photo,
-      description: cur.description || undefined, prep: cur.prep || undefined, contents, source: 'quickscan',
+      description: cur.description || undefined, prep: cur.prep || undefined, contents, qty: cur.count && cur.count > 1 ? cur.count : undefined, source: 'quickscan',
       note: contents === 'sort' ? 'Contents to sort' : undefined, status: 'tagged', createdAt: now(), updatedAt: now(),
     })
     setSaved((s) => ({ ...s, [t]: (s[t] ?? 0) + 1 }))
@@ -225,6 +225,7 @@ export default function QuickScan() {
         {cur.prep && <p className="mt-2 px-3 py-2 rounded-xl bg-[#fef3c7] text-[15px]"><b>Before we arrive:</b> {cur.prep}</p>}
       </div>
       <Segmented options={SIZE_OPTS} value={cur.size} onChange={(size) => edit({ size })} />
+      {askInside === null && (isSetLike(cur.name) || (cur.count ?? 1) > 1) && <SetPicker name={cur.name} value={cur.count ?? 1} onChange={(count) => edit({ count })} />}
 
       {askInside === null && (<>
         <div className="sec mt-1">Where does it go?</div>

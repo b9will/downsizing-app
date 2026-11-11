@@ -2,14 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import { X, Zap, ImagePlus, Check } from 'lucide-react'
-import { Segmented, Sheet, TagChips, Toast } from '../components/ui'
+import { Segmented, SetPicker, Sheet, TagChips, Toast } from '../components/ui'
 import { ai } from '../lib/ai'
 import { snapshot, useCamera } from '../lib/camera'
 import { fileToDataUrl, useStore } from '../lib/hooks'
 import { itemCatalog } from '../lib/itemCatalog'
 import { identifyItems } from '../lib/scan'
 import { now, store, uid } from '../lib/store'
-import { type SizeClass, type Tag } from '../lib/types'
+import { isSetLike, type SizeClass, type Tag } from '../lib/types'
 
 type Match = Awaited<ReturnType<typeof identifyItems>>[number]
 type Tracked = Match & { key: string; seen: number }
@@ -61,7 +61,7 @@ function track(prev: Tracked[], found: Match[], t: number): Tracked[] {
   }
   return next
 }
-type Draft = { photo: string; name: string; size: SizeClass; tag: Tag | null; recipient: string }
+type Draft = { photo: string; name: string; size: SizeClass; tag: Tag | null; recipient: string; qty: number }
 
 const SIZE_OPTS: Array<[SizeClass, string]> = [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large'], ['oversize', 'Huge']]
 
@@ -130,7 +130,7 @@ export default function Scan() {
     const name = m?.name ?? ''
     const size = m?.size ?? itemCatalog.find((i) => i.name === name)?.size ?? ai.suggestTag(name)?.size ?? 'medium'
     const s = ai.suggestTag(name)
-    setDraft({ photo, name, size, tag: s && s.tag !== 'undecided' ? s.tag : null, recipient: '' })
+    setDraft({ photo, name, size, tag: s && s.tag !== 'undecided' ? s.tag : null, recipient: '', qty: 1 })
   }
 
   const shutter = (m?: Match) => {
@@ -158,7 +158,7 @@ export default function Scan() {
     if (!draft || !draft.name.trim() || !draft.tag) return
     const id = uid()
     try { store.saveItem({
-      id, jobId: job.id, roomId: room.id, name: draft.name.trim(), size: draft.size, tag: draft.tag, photo: draft.photo,
+      id, jobId: job.id, roomId: room.id, name: draft.name.trim(), size: draft.size, tag: draft.tag, photo: draft.photo, qty: draft.qty > 1 ? draft.qty : undefined,
       familyRecipient: draft.tag === 'family' ? draft.recipient.trim() || undefined : undefined,
       status: 'tagged', createdAt: now(), updatedAt: now(),
     }, true) } catch {
@@ -255,6 +255,7 @@ export default function Scan() {
             <div className="mb-4">
               <Segmented options={SIZE_OPTS} value={draft.size} onChange={(size) => setDraft({ ...draft, size })} />
             </div>
+            {(isSetLike(draft.name) || draft.qty > 1) && <div className="mb-4"><SetPicker name={draft.name} value={draft.qty} onChange={(qty) => setDraft({ ...draft, qty })} /></div>}
 
             <div className="mb-2 flex items-baseline justify-between">
               <span className="eyebrow">What should happen to it?</span>

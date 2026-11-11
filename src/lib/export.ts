@@ -52,7 +52,7 @@ export function buildCsv(job: Job, rooms: Room[], items: Item[], s: Scope = { ki
   const sorted = [...list].sort((a, b) => order(a) - order(b) || a.name.localeCompare(b.name))
   const showDecision = s.kind === 'all'
   const showFor = s.kind === 'all' || (s.kind === 'tag' && s.tag === 'family')
-  const cols = ['#', 'Sticker', 'Colour', 'Room', 'Item', ...(showDecision ? ['Decision'] : []), 'Size', ...(showFor ? ['For'] : []), 'Note', 'Photo', 'Status']
+  const cols = ['#', 'Sticker', 'Colour', 'Room', 'Item', 'Qty', ...(showDecision ? ['Decision'] : []), 'Size', ...(showFor ? ['For'] : []), 'Note', 'Photo', 'Status']
   const lines = [
     ...header(job, s).map((r) => row(...r)),
     '',
@@ -60,7 +60,7 @@ export function buildCsv(job: Job, rooms: Room[], items: Item[], s: Scope = { ki
     ...(s.kind === 'all' ? [row('By decision', ...Object.values(TAGS).map((t) => t.name)), row('', ...Object.keys(TAGS).map((t) => items.filter((i) => i.tag === t).length))] : []),
     '',
     row(...cols),
-    ...sorted.map((i, n) => row(n + 1, i.sticker ?? '', TAGS[i.tag].sticker, roomName(i.roomId), i.name, ...(showDecision ? [TAGS[i.tag].name] : []), SIZES[i.size].split(' (')[0], ...(showFor ? [i.familyRecipient ?? ''] : []), i.note ?? '', i.photo ? 'yes' : 'no', i.status === 'tagged' ? '' : i.status + (i.statusNote ? `: ${i.statusNote}` : ''))),
+    ...sorted.map((i, n) => row(n + 1, i.sticker ?? '', TAGS[i.tag].sticker, roomName(i.roomId), i.name, i.qty ?? 1, ...(showDecision ? [TAGS[i.tag].name] : []), SIZES[i.size].split(' (')[0], ...(showFor ? [i.familyRecipient ?? ''] : []), i.note ?? '', i.photo ? 'yes' : 'no', i.status === 'tagged' ? '' : i.status + (i.statusNote ? `: ${i.statusNote}` : ''))),
   ]
   return '﻿' + lines.join('\r\n')
 }

@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Check, ChevronLeft, Heart } from 'lucide-react'
-import { Dot, Page, TagChips } from '../components/ui'
+import { Dot, Page, SetPicker, TagChips } from '../components/ui'
 import { useStore } from '../lib/hooks'
 import { now, store } from '../lib/store'
 import { sb } from '../lib/supabase'
-import { TAGS, type Tag } from '../lib/types'
+import { isSetLike, itemLabel, TAGS, type Tag } from '../lib/types'
 
 // Sorting queue: everything that has been scanned but not decided yet, one card at a time.
 // The owner's tap decides. Everyone else's tap is a request the owner sees on the card.
@@ -74,7 +74,7 @@ export default function Sort() {
       </div>
       {cur.photo ? <img src={cur.photo} alt="" className="w-full h-56 object-contain rounded-3xl bg-surface-2" /> : <div className="w-full h-40 rounded-3xl bg-surface-2" />}
       <div>
-        <h1 className="text-[28px]">{cur.name}</h1>
+        <h1 className="text-[28px]">{itemLabel(cur)}</h1>
         <p className="text-ink-2 text-[16px]">{[cur.description, rooms.find((r) => r.id === cur.roomId)?.name].filter(Boolean).join(' · ')}</p>
       </div>
 
@@ -86,6 +86,7 @@ export default function Sort() {
 
       {decides ? (
         <>
+          {(isSetLike(cur.name) || (cur.qty ?? 1) > 1) && <SetPicker name={cur.name} value={cur.qty ?? 1} onChange={(n) => store.saveItem({ ...cur, qty: n > 1 ? n : undefined, updatedAt: now() })} />}
           <div className="sec mt-1">Where does it go?</div>
           <TagChips value={null} onChange={decide} />
           <label htmlFor="who" className="sr-only">If family, who is it for?</label>

@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
-import { Page, Segmented, TagChips } from '../components/ui'
+import { Page, Segmented, SetPicker, TagChips } from '../components/ui'
 import { ai } from '../lib/ai'
 import { itemCatalog } from '../lib/itemCatalog'
 import { now, store, uid } from '../lib/store'
-import { type Item, type SizeClass, type Tag } from '../lib/types'
+import { isSetLike, type Item, type SizeClass, type Tag } from '../lib/types'
 
 const SIZE_OPTS: Array<[SizeClass, string]> = [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large'], ['oversize', 'Huge']]
 
@@ -19,6 +19,7 @@ export default function ItemForm() {
   const [name, setName] = useState(existing?.name ?? '')
   const [size, setSize] = useState<SizeClass>(existing?.size ?? 'medium')
   const [tag, setTag] = useState<Tag | null>(existing?.tag ?? null)
+  const [qty, setQty] = useState(existing?.qty ?? 1)
   const [recipient, setRecipient] = useState(existing?.familyRecipient ?? '')
   const [note, setNote] = useState(existing?.note ?? '')
   if (!job || !room) return <Page><Link to="/rooms">Back to rooms</Link></Page>
@@ -26,6 +27,8 @@ export default function ItemForm() {
   const save = () => {
     if (!name.trim() || !tag) return
     const item: Item = {
+      ...existing,
+      qty: qty > 1 ? qty : undefined,
       id: existing?.id ?? uid(), jobId: job.id, roomId: room.id, name: name.trim(), tag, size, photo: existing?.photo, photoPath: existing?.photoPath,
       note: note.trim() || undefined, familyRecipient: tag === 'family' ? recipient.trim() || undefined : undefined,
       sticker: existing?.sticker, status: existing?.status ?? 'tagged', statusNote: existing?.statusNote,
@@ -52,6 +55,7 @@ export default function ItemForm() {
           <datalist id="catalog">{itemCatalog.map((i) => <option key={i.name} value={i.name} />)}</datalist>
         </div>
         <Segmented options={SIZE_OPTS} value={size} onChange={setSize} />
+        {(isSetLike(name) || qty > 1) && <SetPicker name={name} value={qty} onChange={setQty} />}
         <div>
           <div className="flex items-baseline justify-between mb-2">
             <span className="eyebrow">What should happen to it?</span>

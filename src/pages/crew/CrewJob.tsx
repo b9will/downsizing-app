@@ -68,7 +68,7 @@ export default function CrewJob() {
           {hits.map((i) => (
             <Link key={i.id} to={`/crew/jobs/${job.id}/stop/${i.tag}?item=${i.id}`} className="row py-2">
               <div className="w-11 h-11 rounded-lg bg-surface-2 overflow-hidden shrink-0">{i.photo && <img src={i.photo} alt="" className="w-full h-full object-cover" />}</div>
-              <span className="flex-1 min-w-0"><span className="block font-medium truncate">{i.sticker ? `#${i.sticker} · ` : ''}{i.name}</span><span className="block text-ink-2 text-[14px]">{rooms.find((r) => r.id === i.roomId)?.name}</span></span>
+              <span className="flex-1 min-w-0"><span className="block font-medium truncate">{i.sticker ? `#${i.sticker} · ` : ''}{i.name}{(i.qty ?? 1) > 1 ? ` ×${i.qty}` : ''}</span><span className="block text-ink-2 text-[14px]">{rooms.find((r) => r.id === i.roomId)?.name}</span></span>
               <TagPill tag={i.tag} small />
             </Link>
           ))}
