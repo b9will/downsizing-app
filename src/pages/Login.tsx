@@ -9,7 +9,8 @@ export default function Login() {
   const nav = useNavigate()
   const [params] = useSearchParams()
   const next = params.get('next')?.startsWith('/') ? params.get('next')! : '/'
-  const [step, setStep] = useState<'email' | 'code'>('email')
+  const [step, setStep] = useState<'email' | 'code' | 'password'>('email')
+  const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
@@ -25,6 +26,17 @@ export default function Login() {
     setBusy(false)
     if (error) return setError(/rate/i.test(error.message) ? 'Too many codes sent. Wait a minute and try again.' : error.message)
     setStep('code')
+  }
+  // Staff and testing: sign in with a password instead of an emailed code.
+  const withPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!/.+@.+\..+/.test(email) || !password) return setError('Enter your email and password.')
+    setError(''); setBusy(true)
+    const { error } = await sb.auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
+    if (error) { setBusy(false); return setError('That email and password did not match.') }
+    await store.init()
+    setBusy(false)
+    nav(next, { replace: true })
   }
   const verify = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,6 +66,17 @@ export default function Login() {
           {error && <p role="alert" className="text-danger font-semibold">{error}</p>}
           <button className="btn mt-3" type="submit" disabled={busy}>{busy ? 'Sending…' : 'Email me a code'}</button>
           <p className="text-ink-2 text-[15px] text-center mt-1">No password. We email you a short code each time.</p>
+          <button type="button" className="btn btn-ghost" onClick={() => { setStep('password'); setError('') }}>Sign in with a password</button>
+        </form>
+      ) : step === 'password' ? (
+        <form onSubmit={withPassword} className="flex flex-col gap-2">
+          <label htmlFor="pemail" className="font-medium text-[15px]">Email</label>
+          <input id="pemail" className="input" type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <label htmlFor="pw" className="font-medium text-[15px] mt-2">Password</label>
+          <input id="pw" className="input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          {error && <p role="alert" className="text-danger font-semibold">{error}</p>}
+          <button className="btn mt-3" type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+          <button type="button" className="btn btn-ghost" onClick={() => { setStep('email'); setError('') }}>Email me a code instead</button>
         </form>
       ) : (
         <form onSubmit={verify} className="flex flex-col gap-2">
