@@ -41,7 +41,7 @@ export default function QuickScan() {
   const job = useStore(() => store.getJob())
   const room = useStore(() => (job ? store.listRooms(job.id).find((r) => r.id === roomId) : undefined))
   const [phase, setPhase] = useState<Phase>('intro')
-  const { video, state, canWide, wideOn, toggleWide } = useCamera(phase === 'intro' || phase === 'scan', { preferWide: true })
+  const { video, state, canWide, wideOn, toggleWide } = useCamera(phase === 'intro' || phase === 'scan')
   const frames = useRef<string[]>([])
   const sectors = useRef<Set<number>>(new Set())
   const heading = useRef<number | null>(null)

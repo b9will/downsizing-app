@@ -44,9 +44,9 @@ export default function Home() {
       <h1 className="mb-2">{items.length ? `${items.length} thing${items.length === 1 ? '' : 's'} sorted.${next ? ` ${next.name} next.` : ''}` : headline}</h1>
       {!items.length && <p className="lead mb-4">{body}</p>}
       {next && (
-        <Link to={`/rooms/${next.id}/quick`} className="flex items-center gap-4 p-4 mt-4 mb-6 rounded-3xl bg-ink text-white active:opacity-90">
+        <Link to={`/rooms/${next.id}/scan`} className="flex items-center gap-4 p-4 mt-4 mb-6 rounded-3xl bg-ink text-white active:opacity-90">
           <span className="w-14 h-14 rounded-2xl bg-white text-ink flex items-center justify-center shrink-0"><ScanLine size={28} /></span>
-          <span><span className="block text-[21px] font-semibold" style={{ fontFamily: 'var(--font-display)' }}>Scan the {next.name.toLowerCase()}</span><span className="block text-[15px] text-white/75">Turn slowly. About a minute.</span></span>
+          <span><span className="block text-[21px] font-semibold" style={{ fontFamily: 'var(--font-display)' }}>Scan the {next.name.toLowerCase()}</span><span className="block text-[15px] text-white/75">Point at each item and tap.</span></span>
         </Link>
       )}
 

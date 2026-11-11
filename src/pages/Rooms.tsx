@@ -23,24 +23,24 @@ export default function Rooms() {
   return (
     <Page>
       <h1 className="mb-1">Rooms</h1>
-      <p className="lead mb-5">Tap the camera to scan a room, or the name to review it.</p>
-      <div className="group">
+      <p className="lead mb-5">{rooms.filter((r) => r.done).length} of {rooms.length} done. Tap the camera to scan a room.</p>
+      <div className="flex flex-col gap-2">
         {rooms.map((r) => {
           const n = items.filter((i) => i.roomId === r.id).length
           const last = items.find((i) => i.roomId === r.id && i.photo)
           return (
-            <div key={r.id} className="row py-2 pr-2">
+            <div key={r.id} className="card flex items-center gap-2 py-2.5 pl-3 pr-2.5">
               <Link to={`/rooms/${r.id}`} className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="w-11 h-11 rounded-lg bg-surface-2 overflow-hidden flex items-center justify-center shrink-0">
-                  {last?.photo ? <img src={last.photo} alt="" className="w-full h-full object-cover" /> : r.done ? <Check size={18} className="text-accent" /> : null}
+                <div className="w-12 h-12 rounded-2xl bg-surface overflow-hidden flex items-center justify-center shrink-0">
+                  {last?.photo ? <img src={last.photo} alt="" className="w-full h-full object-cover" /> : r.done ? <Check size={22} strokeWidth={2.6} className="text-accent" /> : <Plus size={20} className="text-ink-3" />}
                 </div>
                 <div className="min-w-0">
-                  <div className="font-medium truncate">{r.name}</div>
-                  <div className="text-ink-2 text-[13px]">{r.done ? 'Done' : n ? `${n} item${n === 1 ? '' : 's'}` : 'Not started'}</div>
+                  <div className="font-semibold truncate">{r.name}</div>
+                  <div className="text-ink-2 text-[14px]">{r.done ? 'Done' : n ? `${n} item${n === 1 ? '' : 's'}` : 'Not started'}</div>
                 </div>
                 <ChevronRight size={18} className="text-ink-3 ml-auto shrink-0" />
               </Link>
-              <Link to={`/rooms/${r.id}/quick`} aria-label={`Scan ${r.name}`} className="w-11 h-11 rounded-lg bg-ink text-white flex items-center justify-center active:opacity-80 shrink-0"><Camera size={18} /></Link>
+              <Link to={`/rooms/${r.id}/scan`} aria-label={`Scan ${r.name}`} className="w-12 h-12 rounded-full bg-ink text-white flex items-center justify-center active:opacity-80 shrink-0"><Camera size={18} /></Link>
             </div>
           )
         })}

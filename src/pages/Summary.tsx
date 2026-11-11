@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Check, ChevronRight, FileSpreadsheet } from 'lucide-react'
-import { Page, TagPill } from '../components/ui'
+import { Dot, Page } from '../components/ui'
 import { ai } from '../lib/ai'
 import { useStore } from '../lib/hooks'
 import { store } from '../lib/store'
@@ -36,15 +36,15 @@ export default function Summary() {
 
   return (
     <Page>
-      <h1 className="mb-1">Summary</h1>
-      <p className="lead mb-6">{revealed ? 'Your estimate, based on what you tagged.' : 'Choose how much you want us to do. Then we show the estimate.'}</p>
+      <h1 className="mb-1">{revealed ? 'Your estimate' : 'How much should we do?'}</h1>
+      <p className="lead mb-6">{revealed ? 'Based on what you tagged and the service you chose.' : 'Pick first. Then we show the price.'}</p>
 
       <div className="eyebrow mb-2 px-1">1. Service</div>
-      <div className="group mb-6" role="radiogroup">
+      <div className="flex flex-col gap-2 mb-6" role="radiogroup">
         {TIERS.map(([v, label, desc]) => {
           const on = job.tier === v
           return (
-            <button key={v} type="button" role="radio" aria-checked={on} onClick={() => store.saveJob({ ...job, tier: v })} className="row py-3 items-start">
+            <button key={v} type="button" role="radio" aria-checked={on} onClick={() => store.saveJob({ ...job, tier: v })} className={`flex gap-3 p-4 rounded-[22px] text-left items-start ${on ? 'bg-surface shadow-[0_0_0_3px_#111]' : 'bg-soft'}`}>
               <span className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${on ? 'border-ink bg-ink' : 'border-line'}`}>{on && <Check size={12} className="text-white" strokeWidth={3} />}</span>
               <span className="min-w-0"><span className="block font-semibold">{label}</span><span className="block text-ink-2 text-[14px]">{desc}</span></span>
             </button>
@@ -55,7 +55,7 @@ export default function Summary() {
       <div className="eyebrow mb-2 px-1">2. What you tagged</div>
       <div className="card mb-6">
         <div className="flex flex-wrap gap-x-4 gap-y-2">
-          {counts.length ? counts.map((c) => <span key={c.t} className="inline-flex items-center gap-1.5 text-[14px] font-medium"><TagPill tag={c.t} small /> {c.n}</span>) : <span className="text-ink-3 text-[14px]">Nothing tagged yet.</span>}
+          {counts.length ? counts.map((c) => <span key={c.t} className="inline-flex items-center gap-1.5 text-[15px] font-semibold"><Dot tag={c.t} size={26} /> {c.n}</span>) : <span className="text-ink-3 text-[14px]">Nothing tagged yet.</span>}
         </div>
         {(unfinished.length > 0 || undecided.length > 0) && (
           <div className="mt-3 pt-3 border-t border-line text-[14px] text-ink-2 flex flex-col gap-1">
@@ -72,10 +72,12 @@ export default function Summary() {
           <button className="btn" disabled={items.length === 0} onClick={() => setRevealed(true)}>Show my estimate</button>
         </div>
       ) : (
-        <div className="card mb-6">
-          <div className="text-[13px] text-ink-2 mb-1">{TIERS.find(([v]) => v === job.tier)?.[1]}</div>
-          <div className="text-[30px] font-semibold tracking-tight tabular-nums leading-none mb-1">{money(q.priceLow)} <span className="text-ink-3 text-[20px] font-medium">to</span> {money(q.priceHigh)}</div>
-          <div className="text-[13px] text-ink-2 mb-4">All-in, before tax. Anything sold is credited back to you.</div>
+        <div className="mb-6">
+          <div className="rounded-3xl bg-ink text-white p-5 mb-3">
+            <div className="text-[14px] text-white/70 mb-1">{TIERS.find(([v]) => v === job.tier)?.[1]}</div>
+            <div className="text-[34px] font-semibold tracking-tight tabular-nums leading-none mb-2" style={{ fontFamily: 'var(--font-display)' }}>{money(q.priceLow)} <span className="text-white/60 text-[20px] font-medium">to</span> {money(q.priceHigh)}</div>
+            <div className="text-[14px] text-white/70">All-in, before tax. Anything sold is credited back to you.</div>
+          </div>
           <dl className="divide-y divide-line text-[15px]">
             {[['Crew', `${q.crew} movers`], ['Time on site', `${q.hours} hours`], ['Truck', q.truck], ['Boxes and supplies', `${q.boxes} boxes`],
               ...(q.storageUnit ? [['Storage', q.storageUnit]] : []),

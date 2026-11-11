@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FileSpreadsheet, Pencil } from 'lucide-react'
-import { Page, Segmented, Sheet, TagChips, TagPill } from '../components/ui'
+import { Dot, Page, Segmented, Sheet, TagChips } from '../components/ui'
 import { ExportSheet } from '../components/ExportSheet'
 import { useStore } from '../lib/hooks'
 import { now, store } from '../lib/store'
@@ -46,10 +46,10 @@ export default function Plan() {
 
   const Row = ({ i }: { i: Item }) => (
     <button type="button" onClick={() => setEditing(i)} className="flex items-center gap-3 w-full text-left py-2 border-t border-line first:border-t-0">
-      <div className="w-10 h-10 rounded-lg bg-surface-2 overflow-hidden shrink-0">{i.photo && <img src={i.photo} alt="" className="w-full h-full object-cover" />}</div>
+      <div className="w-11 h-11 rounded-xl bg-surface overflow-hidden shrink-0">{i.photo && <img src={i.photo} alt="" className="w-full h-full object-cover" />}</div>
       <div className="flex-1 min-w-0">
         <div className="font-medium text-[15px] truncate">{i.name}</div>
-        <div className="text-ink-2 text-[13px] truncate">{roomName(i.roomId)} · {SIZES[i.size].split(' (')[0]}{i.note ? ` · ${i.note}` : ''}</div>
+        <div className="text-ink-2 text-[14px] truncate">{i.description ? `${i.description} · ` : ''}{roomName(i.roomId)} · {SIZES[i.size].split(' (')[0]}{i.note ? ` · ${i.note}` : ''}</div>
       </div>
       <Pencil size={16} className="text-ink-3 shrink-0" />
     </button>
@@ -68,8 +68,8 @@ export default function Plan() {
           const n = t === 'all' ? items.length : items.filter((i) => i.tag === t).length
           if (t !== 'all' && !n) return null
           return (
-            <button key={t} onClick={() => setFilter(t)} className={`shrink-0 rounded-full px-4 h-11 text-[15px] font-medium border ${filter === t ? 'bg-ink text-white border-ink' : 'bg-surface border-line text-ink'}`}>
-              {t === 'all' ? `All ${n}` : `${TAGS[t].name} ${n}`}
+            <button key={t} onClick={() => setFilter(t)} className={`shrink-0 rounded-full px-4 h-11 text-[15px] font-medium border ${filter === t ? 'bg-ink text-white border-ink' : 'bg-surface-2 border-transparent text-ink'}`}>
+              {t === 'all' ? `All ${n}` : <span className="inline-flex items-center gap-1.5"><Dot tag={t} size={18} />{TAGS[t].name} {n}</span>}
             </button>
           )
         })}
@@ -83,7 +83,7 @@ export default function Plan() {
         {groups.map((g) => (
           <section key={g.t} className="card pt-3">
             <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2"><TagPill tag={g.t} /><span className="text-ink-2 text-[14px] font-semibold">{g.list.length}</span></div>
+              <div className="flex items-center gap-3"><Dot tag={g.t} size={38} /><span className="sec">{TAGS[g.t].name} · {g.list.length}</span></div>
             </div>
             <p className="text-ink-2 text-[13px] mb-1">{BLURB[g.t]}</p>
             {g.t === 'family'
