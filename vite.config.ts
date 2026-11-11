@@ -11,14 +11,18 @@ export default defineConfig(({ command }) => ({
     // HTTPS in dev so iOS Safari allows the live camera stream on the LAN.
     ...(command === 'serve' ? [basicSsl()] : []),
     VitePWA({
+      // While the app changes daily, never serve a cached copy: this removes the old
+      // offline cache from every phone so each visit loads the newest version.
+      // Turn offline caching back on before real clients (set selfDestroying to false).
+      selfDestroying: true,
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg'],
       manifest: {
-        name: 'Downsizing Companion',
-        short_name: 'Downsizing',
+        name: 'Dot',
+        short_name: 'Dot',
         description: 'Walk through your home and tag what stays, moves, or goes.',
-        theme_color: '#0f1115',
-        background_color: '#0f1115',
+        theme_color: '#ffffff',
+        background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
