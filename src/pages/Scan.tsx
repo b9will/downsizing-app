@@ -20,18 +20,45 @@ const iou = (a: number[], b: number[]) => {
   const inter = Math.max(0, x2 - x1) * Math.max(0, y2 - y1)
   return inter / (a[2] * a[3] + b[2] * b[3] - inter || 1)
 }
-/** Match new detections to boxes already on screen; keep unmatched ones for HOLD_MS. */
+const MAX_BOXES = 3
+const centre = (b: number[]) => [b[0] + b[2] / 2, b[1] + b[3] / 2]
+/** Match new detections to boxes already on screen; keep unmatched ones for HOLD_MS while the camera is still. */
 function track(prev: Tracked[], found: Match[], t: number): Tracked[] {
+  // Ignore specks, clamp to the frame, drop doubles of the same thing, and show only a few at once.
+  const clean: Match[] = []
+  for (const f of found) {
+    const x = Math.max(0, f.bounds[0]), y = Math.max(0, f.bounds[1])
+    const m = { ...f, bounds: [x, y, Math.min(1, f.bounds[0] + f.bounds[2]) - x, Math.min(1, f.bounds[1] + f.bounds[3]) - y] }
+    if (m.bounds[2] * m.bounds[3] < 0.04) continue
+    if (clean.some((c) => iou(c.bounds, m.bounds) > 0.45)) continue
+    clean.push(m)
+    if (clean.length === MAX_BOXES) break
+  }
   const used = new Set<string>()
-  const next: Tracked[] = found.map((m) => {
+  let moved = 0, matched = 0
+  const next: Tracked[] = clean.map((m) => {
     const hit = prev.filter((p) => p.name === m.name && !used.has(p.key)).sort((a, b) => iou(b.bounds, m.bounds) - iou(a.bounds, m.bounds))[0]
-    const key = hit && iou(hit.bounds, m.bounds) > 0.2 ? hit.key : `${m.name}-${t}-${Math.random().toString(36).slice(2, 6)}`
+    const same = !!hit && iou(hit.bounds, m.bounds) > 0.15
+    const key = same ? hit.key : `${m.name}-${t}-${Math.random().toString(36).slice(2, 6)}`
     used.add(key)
-    // Ease the box toward the new position so it doesn't jitter.
-    const bounds = hit && key === hit.key ? hit.bounds.map((v, i) => v * 0.4 + m.bounds[i] * 0.6) : m.bounds
-    return { ...m, bounds, key, seen: t }
+    if (!same) return { ...m, key, seen: t }
+    const [ax, ay] = centre(hit.bounds), [bx, by] = centre(m.bounds)
+    const d = Math.hypot(ax - bx, ay - by)
+    moved += d; matched++
+    // Small wobble: mostly hold still. Real movement: follow quickly.
+    const k = d < 0.03 ? 0.25 : 0.8
+    return { ...m, bounds: hit.bounds.map((v, i) => v + (m.bounds[i] - v) * k), key, seen: t }
   })
-  prev.forEach((p) => { if (!used.has(p.key) && t - p.seen < HOLD_MS) next.push({ ...p, centered: false }) })
+  // Lingering boxes only make sense while the phone is still. Once it pans, old boxes point at nothing.
+  const panning = matched ? moved / matched > 0.05 : clean.length > 0 && prev.length > 0
+  if (!panning) {
+    for (const p of prev) {
+      if (next.length >= MAX_BOXES) break
+      if (used.has(p.key) || t - p.seen >= HOLD_MS) continue
+      if (next.some((n) => iou(n.bounds, p.bounds) > 0.1)) continue
+      next.push({ ...p, centered: false })
+    }
+  }
   return next
 }
 type Draft = { photo: string; name: string; size: SizeClass; tag: Tag | null; recipient: string }
@@ -164,7 +191,7 @@ export default function Scan() {
           <motion.button
             key={m.key}
             type="button" aria-label={`Select ${m.name}`} onClick={() => shutter(m)}
-            initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1, left: `${m.bounds[0] * 100}%`, top: `${m.bounds[1] * 100}%`, width: `${m.bounds[2] * 100}%`, height: `${m.bounds[3] * 100}%` }} exit={{ opacity: 0, transition: { duration: 0.45 } }} transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+            initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1, left: `${m.bounds[0] * 100}%`, top: `${m.bounds[1] * 100}%`, width: `${m.bounds[2] * 100}%`, height: `${m.bounds[3] * 100}%` }} exit={{ opacity: 0, transition: { duration: 0.2 } }} transition={{ duration: 0.3, ease: 'linear', opacity: { duration: 0.2 }, scale: { duration: 0.2 } }}
             className={`absolute rounded-[22px] ${m.centered ? 'bg-white/20 shadow-[inset_0_0_0_2px_rgba(255,255,255,0.95),0_0_32px_rgba(255,255,255,0.35)]' : 'bg-white/10 shadow-[inset_0_0_0_1.5px_rgba(255,255,255,0.75)]'}`}
           >
             {(['left-0 top-0 border-l-4 border-t-4 rounded-tl-[22px]', 'right-0 top-0 border-r-4 border-t-4 rounded-tr-[22px]', 'left-0 bottom-0 border-l-4 border-b-4 rounded-bl-[22px]', 'right-0 bottom-0 border-r-4 border-b-4 rounded-br-[22px]'] as const).map((c) => <span key={c} aria-hidden className={`absolute w-7 h-7 border-white ${c}`} />)}
