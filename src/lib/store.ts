@@ -66,7 +66,7 @@ class CloudStore {
     if (!session) { this.clear(); return }
     // Show the cache instantly, but only once we know their home. Otherwise wait, so a returning person never lands on the first-time setup page.
     if (this.db.user?.id === session.user.id) { if (this.db.job || this.db.user.role !== 'client') { this.ready = true; this.emit() } }
-    else this.db = { user: null, job: null, jobs: [], rooms: [], items: [] }
+    else { this.db = { user: null, job: null, jobs: [], rooms: [], items: [] }; this.outbox = []; write(OUTBOX, []) } // never send one person's unsent changes as another
     try { await this.refresh(session.user) } catch (e) { this.lastError = String(e) }
     this.ready = true; this.emit()
     void this.flush()
@@ -78,8 +78,14 @@ class CloudStore {
     const { data: p } = await sb.from('profiles').select('*').eq('id', authUser.id).maybeSingle()
     this.db.user = { id: authUser.id, email: authUser.email ?? '', name: p?.name || authUser.user_metadata?.name || '', role: p?.role ?? 'client' }
     if (this.db.user.role === 'client') {
-      const { data: jobs } = await sb.from('jobs').select('*').neq('status', 'cancelled').order('created_at', { ascending: false })
-      this.db.jobs = (jobs ?? []).map(jobFrom)
+      const fetchJobs = async () => { const { data: jobs, error } = await sb.from('jobs').select('*').neq('status', 'cancelled').order('created_at', { ascending: false }); if (error) throw new Error(error.message); this.db.jobs = (jobs ?? []).map(jobFrom) }
+      await fetchJobs()
+      // A home that only exists on this phone (it never reached the server): send it up again rather than lose it.
+      const local = this.db.job
+      if (local && local.ownerId === authUser.id && local.status !== 'cancelled' && !this.db.jobs.some((j) => j.id === local.id)) {
+        const { count } = await sb.from('jobs').select('id', { count: 'exact', head: true }).eq('id', local.id)
+        if (!count) { await this.resend(local); await fetchJobs() }
+      }
       const pick = this.db.jobs.find((j) => j.id === localStorage.getItem(ACTIVE)) ?? this.db.jobs.find((j) => j.ownerId === authUser.id) ?? this.db.jobs[0]
       if (pick) await this.loadJob(pick.id); else { this.db.job = null; this.db.rooms = []; this.db.items = [] }
     } else {
@@ -88,6 +94,21 @@ class CloudStore {
       if (active && this.db.jobs.some((j) => j.id === active)) await this.loadJob(active)
     }
     this.persist()
+  }
+
+  /** Queue a whole job again: the job, its rooms, its items, and any photos still on this phone. */
+  private async resend(job: Job) {
+    const have = new Set(this.outbox.map((o) => `${o.k}:${o.id}`))
+    const add = (op: Op) => { if (!have.has(`${op.k}:${op.id}`)) this.outbox.push(op) }
+    this.outbox = this.outbox.filter((o) => !(o.k === 'upsert' && o.id === job.id))
+    this.outbox.unshift({ k: 'upsert', t: 'jobs', id: job.id, row: jobTo(job) })
+    for (const r of this.db.rooms.filter((x) => x.jobId === job.id)) add({ k: 'upsert', t: 'rooms', id: r.id, row: roomTo(r) })
+    for (const i of this.db.items.filter((x) => x.jobId === job.id)) {
+      if (i.photoPath && (await idbGet(`photo:${i.id}`).catch(() => null))) add({ k: 'upload', id: i.id, path: i.photoPath })
+      add({ k: 'upsert', t: 'items', id: i.id, row: itemTo(i) })
+    }
+    write(OUTBOX, this.outbox)
+    await this.flush()
   }
 
   async loadJobs() {

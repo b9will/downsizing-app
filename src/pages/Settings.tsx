@@ -169,7 +169,8 @@ export default function Settings() {
             <h2 className="mb-2">{inviteKind === 'scanner' ? 'Invite someone to scan' : 'Invite family'}</h2>
             <p className="text-ink-2 text-[16px] mb-4">{inviteKind === 'scanner' ? 'For someone at the house. They sign in, enter this code, and scan each room. Nothing is decided: every item comes to you to sort.' : 'They sign in with their own email, enter this code, and see the list. They can say what they would like. You make the final call.'}</p>
             <div className="text-center text-[36px] font-semibold tracking-[0.25em] tabular-nums mb-4" aria-live="polite">{busy ? '…' : invite || '—'}</div>
-            <button className="btn" disabled={!invite} onClick={shareInvite}>Send the invite</button>
+            {!busy && !invite && <p role="alert" className="text-danger font-semibold text-center mb-3">We could not make a code. Check your connection and try again.</p>}
+            {!busy && !invite ? <button className="btn" onClick={() => makeInvite(inviteKind)}>Try again</button> : <button className="btn" disabled={!invite} onClick={shareInvite}>Send the invite</button>}
             <p className="text-ink-2 text-[14px] text-center mt-2">The code works for 30 days.</p>
           </div>
         )}

@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { FileSpreadsheet, Link2 } from 'lucide-react'
+import { FileSpreadsheet, FileText, Link2 } from 'lucide-react'
 import { Sheet, TagPill } from './ui'
 import { exportCsv, itemsFor, recipientOf, scopeLabel, type Scope } from '../lib/export'
+import { exportPdf } from '../lib/pdf'
 import { store } from '../lib/store'
 import { type Item, type Job, type Room, type Tag } from '../lib/types'
 
@@ -21,6 +22,10 @@ export function ExportSheet({ open, onOpenChange, job, rooms, items }: { open: b
     setBusy(key)
     try { await exportCsv(job, rooms, items, s) } finally { setBusy(null) }
   }
+  const pdf = async (s: Scope, key: string) => {
+    setBusy(`pdf-${key}`); setNote('')
+    try { await exportPdf(job, rooms, items, s) } catch { setNote('Could not make the PDF. Please try again.') } finally { setBusy(null) }
+  }
   /** A no-login web page for the charity, consignment house or relative. Always up to date. */
   const link = async (s: Scope, key: string, label: string) => {
     setBusy(`link-${key}`); setNote('')
@@ -39,6 +44,7 @@ export function ExportSheet({ open, onOpenChange, job, rooms, items }: { open: b
         {pill ? <TagPill tag={pill} small /> : <FileSpreadsheet size={18} className="text-ink-3" />}
         <span className="flex-1 min-w-0"><span className="block font-medium text-[16px]">{label}</span><span className="block text-ink-2 text-[14px]">{sub ? `${sub} · ` : ''}{n} item{n === 1 ? '' : 's'}</span></span>
         {k !== 'all' && <button type="button" disabled={!n || busy !== null} onClick={() => link(s, k, label)} className="btn btn-secondary btn-sm h-11 px-3" aria-label={`Send a link: ${label}`}><Link2 size={16} />{busy === `link-${k}` ? '…' : 'Link'}</button>}
+        <button type="button" disabled={!n || busy !== null} onClick={() => pdf(s, k)} className="btn btn-secondary btn-sm h-11 px-3" aria-label={`Download PDF: ${label}`}><FileText size={16} />{busy === `pdf-${k}` ? '…' : 'PDF'}</button>
         <button type="button" disabled={!n || busy !== null} onClick={() => go(s, k)} className="btn btn-secondary btn-sm h-11 px-3" aria-label={`Download spreadsheet: ${label}`}><FileSpreadsheet size={16} />{busy === k ? '…' : 'CSV'}</button>
       </div>
     )
@@ -47,7 +53,8 @@ export function ExportSheet({ open, onOpenChange, job, rooms, items }: { open: b
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <h2 className="mb-1">Export a list</h2>
-      <p className="text-ink-2 text-[15px] mb-3"><b className="text-ink">Link</b> sends a web page with photos that stays up to date, no login needed. <b className="text-ink">CSV</b> downloads a spreadsheet.</p>
+      <p className="text-ink-2 text-[15px] mb-3"><b className="text-ink">Link</b> sends a web page with photos that stays up to date, no login needed. <b className="text-ink">PDF</b> is a printable record with photos. <b className="text-ink">CSV</b> is a spreadsheet.</p>
+      <button type="button" className="btn mb-3" disabled={!items.length || busy !== null} onClick={() => pdf({ kind: 'all' }, 'top')}><FileText size={20} />{busy === 'pdf-top' ? 'Making your PDF…' : 'Inventory PDF with photos'}</button>
       {note && <p role="status" className="text-accent font-medium text-[15px] mb-2">{note}</p>}
       <Row s={{ kind: 'all' }} k="all" label="Everything" sub="Full inventory with all details, for our team" />
       {ORDER.filter((t) => t !== 'family').map((t) => <Row key={t} s={{ kind: 'tag', tag: t }} k={t} label={WHO[t]} pill={t} />)}
