@@ -40,7 +40,7 @@ export default function Rooms() {
                 </div>
                 <ChevronRight size={18} className="text-ink-3 ml-auto shrink-0" />
               </Link>
-              <Link to={`/rooms/${r.id}/scan`} aria-label={`Scan ${r.name}`} className="w-11 h-11 rounded-lg bg-ink text-white flex items-center justify-center active:opacity-80 shrink-0"><Camera size={18} /></Link>
+              <Link to={`/rooms/${r.id}/quick`} aria-label={`Scan ${r.name}`} className="w-11 h-11 rounded-lg bg-ink text-white flex items-center justify-center active:opacity-80 shrink-0"><Camera size={18} /></Link>
             </div>
           )
         })}

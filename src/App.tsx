@@ -13,6 +13,7 @@ import Plan from './pages/Plan'
 import Room from './pages/Room'
 import Rooms from './pages/Rooms'
 import Scan from './pages/Scan'
+import QuickScan from './pages/QuickScan'
 import Settings from './pages/Settings'
 import Summary from './pages/Summary'
 import Start from './pages/Start'
@@ -73,6 +74,7 @@ export default function App() {
           <Route element={<ClientOnly />}>
             <Route element={<RequireCamera />}>
               <Route path="/rooms/:roomId/scan" element={<Scan />} />
+              <Route path="/rooms/:roomId/quick" element={<QuickScan />} />
               <Route element={<Shell />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/rooms" element={<Rooms />} />

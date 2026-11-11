@@ -82,6 +82,7 @@ export interface Room {
 }
 
 export type ItemStatus = 'tagged' | 'loaded' | 'delivered' | 'collected' | 'damaged' | 'missing' | 'rejected'
+export type Contents = 'none' | 'donate' | 'junk' | 'leave' | 'family' | 'sort'
 export interface Item {
   id: string
   jobId: string
@@ -97,6 +98,13 @@ export interface Item {
   sticker?: string
   status: ItemStatus
   statusNote?: string
+  /** One-line look of the item, written by the room scan. */
+  description?: string
+  /** What the owner must do before movers arrive (e.g. unplug the fridge). */
+  prep?: string
+  /** What happens to what's inside a container. */
+  contents?: Contents
+  source?: 'manual' | 'quickscan' | 'sticker'
   createdAt: string
   updatedAt: string
 }

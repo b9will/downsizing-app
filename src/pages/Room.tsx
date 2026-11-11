@@ -25,11 +25,11 @@ export default function Room() {
       <Link to="/rooms" className="back"><ChevronLeft size={18} /> Rooms</Link>
       <div className="flex items-end justify-between mb-5 gap-3">
         <div className="min-w-0"><h1 className="truncate">{room.name}</h1><p className="lead">{items.length ? `${items.length} item${items.length === 1 ? '' : 's'}` : 'Nothing tagged yet'}</p></div>
-        <Link to={`/rooms/${room.id}/scan`} className="btn w-auto shrink-0"><Camera size={18} /> Scan</Link>
+        <Link to={`/rooms/${room.id}/quick`} className="btn w-auto shrink-0"><Camera size={18} /> Scan</Link>
       </div>
 
       {items.length === 0 ? (
-        <Link to={`/rooms/${room.id}/scan`} className="card flex flex-col items-center text-center py-10 text-ink-2 text-[15px]">
+        <Link to={`/rooms/${room.id}/quick`} className="card flex flex-col items-center text-center py-10 text-ink-2 text-[15px]">
           <Camera size={28} className="mb-2 text-ink-3" />Point the camera at the first item
         </Link>
       ) : (
