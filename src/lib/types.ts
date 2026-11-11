@@ -19,7 +19,7 @@ export const TAGS: Record<Tag, { name: string; desc: string; sticker: string; he
   sell: { name: 'Sell', desc: 'Has resale value', sticker: 'Orange', hex: '#ea580c', fg: '#fff' },
   donate: { name: 'Donate', desc: 'Usable, give away', sticker: 'Yellow', hex: '#facc15', fg: '#16181c' },
   junk: { name: 'Junk', desc: 'Dispose or recycle', sticker: 'Red', hex: '#dc2626', fg: '#fff' },
-  store: { name: 'Store', desc: 'Keep, but not now', sticker: 'Black', hex: '#16181c', fg: '#fff' },
+  store: { name: 'Store', desc: 'Keep, but not now', sticker: 'Black', hex: '#111111', fg: '#fff' },
   undecided: { name: 'Not sure', desc: 'We will help you decide', sticker: 'White', hex: '#ffffff', fg: '#16181c' },
 }
 export const TAG_ORDER: Tag[] = ['move', 'donate', 'sell', 'family', 'store', 'junk', 'keep', 'undecided']
@@ -113,4 +113,16 @@ export interface Quote {
   priceLow: number
   priceHigh: number
   notes: string[]
+}
+
+/** Pictogram for each destination, drawn inside its dot. Same icon is printed on the sticker. */
+export const TAG_ICON: Record<Tag, string> = {
+  move: 'M2 6h12v10H2z M14 9h4l4 4v3h-8 M4 18a2 2 0 1 0 4 0a2 2 0 1 0-4 0 M16 18a2 2 0 1 0 4 0a2 2 0 1 0-4 0',
+  keep: 'M3 11l9-7 9 7v9H3z M9 20v-6h6v6',
+  family: 'M6 8a3 3 0 1 0 6 0a3 3 0 1 0-6 0 M14.5 9a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0-5 0 M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6 M15.5 14.5c2.6.2 4.5 2.3 4.5 5',
+  sell: 'M3 12V4h8l9 9-8 8z M6 8.5a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0-3 0',
+  donate: 'M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z',
+  junk: 'M4 7h16 M9 7V4h6v3 M6 7l1 13h10l1-13 M10 11v6 M14 11v6',
+  store: 'M3 8l9-5 9 5v8l-9 5-9-5z M3 8l9 5 9-5 M12 13v8',
+  undecided: 'M9 9a3 3 0 1 1 4.2 2.8c-.7.3-1.2 1-1.2 1.8V15 M12 18.5v.5',
 }

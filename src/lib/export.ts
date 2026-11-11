@@ -30,7 +30,7 @@ export function itemsFor(items: Item[], s: Scope): Item[] {
 function header(job: Job, s: Scope): string[][] {
   const d = { ...EMPTY_DETAILS, ...job.details }
   const pickup = [['Pickup address', d.currentAddress], ['Access notes', d.accessNotes], ['Contact', job.clientName], ['Contact phone', d.phone], ['Move date', d.moveDate]]
-  const ours = [['Prepared by', 'Downsizing Companion'], ['Prepared', when()]]
+  const ours = [['Prepared by', 'Dot'], ['Prepared', when()]]
   switch (s.kind === 'tag' ? s.tag : s.kind) {
     case 'all': return [['Client', job.clientName], ['Phone', d.phone], ['Email', d.email], ['Current address', d.currentAddress], ['New address', d.newAddress], ['Move date', d.moveDate], ['Service', { clear: 'Clear', 'clear-move': 'Clear and move', 'clear-move-settle': 'Clear, move and settle' }[job.tier]], ['Status', job.status], ['Family contact', [d.contactName, d.contactRelation, d.contactPhone].filter(Boolean).join(', ')], ['Preferred charity', d.charity], ['Charity address', d.charityAddress], ['Access notes', d.accessNotes], ...ours]
     case 'donate': return [['Donation list for', d.charity || 'Charity partner'], ['Drop-off or pickup location', d.charityAddress], ...pickup, ...ours]

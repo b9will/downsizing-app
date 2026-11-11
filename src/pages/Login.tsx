@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Page } from '../components/ui'
+import { Dot, Page } from '../components/ui'
 import { sb } from '../lib/supabase'
 import { store } from '../lib/store'
 
@@ -53,9 +53,9 @@ export default function Login() {
 
   return (
     <Page className="min-h-full flex flex-col justify-center">
-      <img src="/icon.svg" alt="" width={48} height={48} className="rounded-xl mb-5" />
-      <h1 className="mb-2">Downsizing Companion</h1>
-      <p className="lead mb-8">Walk through the home. Point, tap, done. We take care of the rest.</p>
+      <div className="flex gap-2 mb-5" aria-hidden><Dot tag="move" size={44} /><Dot tag="donate" size={44} /><Dot tag="sell" size={44} /><Dot tag="family" size={44} /></div>
+      <h1 className="mb-3 text-[40px]">Put a dot on it.<br />We do the rest.</h1>
+      <p className="lead mb-8">Walk through the home with your phone. Choose where each thing goes. Our crew handles the moving, giving, selling and clearing.</p>
 
       {step === 'email' ? (
         <form onSubmit={sendCode} className="flex flex-col gap-2">

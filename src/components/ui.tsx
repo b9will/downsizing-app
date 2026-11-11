@@ -1,7 +1,7 @@
 import { Drawer } from 'vaul'
 import { motion, AnimatePresence } from 'motion/react'
 import type { ReactNode } from 'react'
-import { TAGS, TAG_ORDER, type Tag } from '../lib/types'
+import { TAGS, TAG_ICON, TAG_ORDER, type Tag } from '../lib/types'
 
 /** Page wrapper with a soft slide-in. */
 export function Page({ children, className = '' }: { children: ReactNode; className?: string }) {
@@ -22,7 +22,7 @@ export function Sheet({ open, onOpenChange, children, footer, dismissible = true
     <Drawer.Root open={open} onOpenChange={onOpenChange} dismissible={dismissible} repositionInputs={false}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/40 z-40" />
-        <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 bg-surface rounded-t-2xl outline-none max-h-[92dvh] flex flex-col">
+        <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 bg-surface rounded-t-[28px] outline-none max-h-[92dvh] flex flex-col">
           <div className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-line" aria-hidden />
           <Drawer.Title className="sr-only">Item</Drawer.Title>
           <div className={`overflow-y-auto px-5 pt-3 ${footer ? 'pb-4' : 'pb-[calc(var(--spacing-safe-b)+20px)]'}`}>{children}</div>
@@ -34,20 +34,18 @@ export function Sheet({ open, onOpenChange, children, footer, dismissible = true
   )
 }
 
-/** Tag chip row. One tap. */
+/** Destination picker: eight big sticker dots, each with its pictogram and word. One tap. */
 export function TagChips({ value, onChange, compact = false }: { value: Tag | null; onChange: (t: Tag) => void; compact?: boolean }) {
-  const order = TAG_ORDER
+  const size = compact ? 48 : 58
   return (
-    <div className={`grid gap-2 ${compact ? 'grid-cols-4' : 'grid-cols-2'}`} role="radiogroup" aria-label="What should happen to it">
-      {order.map((t) => {
+    <div className="grid grid-cols-4 gap-x-1 gap-y-3" role="radiogroup" aria-label="Where does it go">
+      {TAG_ORDER.map((t) => {
         const on = value === t
         return (
-          <button
-            key={t} type="button" role="radio" aria-checked={on} onClick={() => onChange(t)}
-            className={`flex items-center gap-2 h-12 px-3 rounded-xl border text-left transition-colors ${on ? 'border-ink bg-ink text-white' : 'border-line bg-surface text-ink'}`}
-          >
-            <Dot tag={t} />
-            <span className={`font-medium ${compact ? 'text-[13px]' : 'text-[15px]'}`}>{TAGS[t].name}</span>
+          <button key={t} type="button" role="radio" aria-checked={on} onClick={() => onChange(t)}
+            className="flex flex-col items-center gap-1.5 min-h-11 active:scale-95 transition-transform">
+            <Dot tag={t} size={size} selected={on} />
+            <span className={`text-[14px] ${on ? 'font-bold' : 'font-semibold'}`}>{TAGS[t].name}</span>
           </button>
         )
       })}
@@ -55,15 +53,21 @@ export function TagChips({ value, onChange, compact = false }: { value: Tag | nu
   )
 }
 
-/** The sticker dot. White and yellow get a ring so they read on white. */
-export function Dot({ tag, size = 14 }: { tag: Tag; size?: number }) {
-  return <span aria-hidden className="rounded-full shrink-0 inline-block" style={{ width: size, height: size, background: TAGS[tag].hex, boxShadow: 'inset 0 0 0 1.5px rgba(0,0,0,0.25)' }} />
+/** The sticker dot. From 22px up it carries its pictogram; white gets an ink ring so it reads on white. */
+export function Dot({ tag, size = 14, selected = false }: { tag: Tag; size?: number; selected?: boolean }) {
+  const t = TAGS[tag]
+  const ring = selected ? '0 0 0 3px #fff, 0 0 0 6px #111' : tag === 'undecided' ? 'inset 0 0 0 2px #111' : tag === 'donate' && size < 22 ? 'inset 0 0 0 1.5px rgba(0,0,0,0.25)' : undefined
+  return (
+    <span aria-hidden className="rounded-full shrink-0 inline-flex items-center justify-center" style={{ width: size, height: size, background: t.hex, color: t.fg, boxShadow: ring }}>
+      {size >= 22 && <svg width={Math.round(size * 0.46)} height={Math.round(size * 0.46)} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d={TAG_ICON[tag]} /></svg>}
+    </span>
+  )
 }
 
 export function TagPill({ tag, small = false }: { tag: Tag; small?: boolean }) {
   const t = TAGS[tag]
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-md font-semibold ${small ? 'px-1.5 py-px text-[12px] uppercase tracking-[0.03em]' : 'px-2 py-0.5 text-[13px] uppercase tracking-[0.03em]'}`} style={{ background: t.hex, color: t.fg, boxShadow: tag === 'undecided' ? 'inset 0 0 0 1px #c9c6be' : undefined }}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full font-semibold ${small ? 'px-2 py-px text-[12px] uppercase tracking-[0.03em]' : 'px-2.5 py-0.5 text-[13px] uppercase tracking-[0.03em]'}`} style={{ background: t.hex, color: t.fg, boxShadow: tag === 'undecided' ? 'inset 0 0 0 1px #c9c6be' : undefined }}>
       {TAGS[tag].name}
     </span>
   )

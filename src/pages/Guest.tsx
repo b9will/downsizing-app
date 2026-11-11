@@ -39,7 +39,7 @@ export default function Guest() {
   return (
     <div className="page max-w-3xl pb-16">
       <div className="flex items-center justify-between mb-4">
-        <span className="eyebrow">Downsizing Companion</span>
+        <span className="eyebrow">Dot</span>
         <button className="no-print btn btn-secondary btn-sm" onClick={() => window.print()}><Printer size={16} /> Print</button>
       </div>
       <div className="flex items-center gap-2 mb-2">{tag && <TagPill tag={tag} />}{tag && <span className="text-ink-2 text-[15px]">Look for {TAGS[tag].sticker.toLowerCase()} stickers</span>}</div>
