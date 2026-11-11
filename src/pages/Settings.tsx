@@ -41,13 +41,17 @@ export default function Settings() {
   if (!user || !job) return null
   const isOwner = job.ownerId === user.id
 
-  const makeInvite = async () => {
+  const [inviteKind, setInviteKind] = useState<'family' | 'scanner'>('family')
+  const makeInvite = async (kind: 'family' | 'scanner' = 'family') => {
+    setInviteKind(kind)
     setDanger('invite'); setInvite(''); setBusy(true)
-    try { setInvite(await store.invite('family')) } catch { setInvite('') ; setMsg('Could not make a code. Check your connection.') } finally { setBusy(false) }
+    try { setInvite(await store.invite(kind)) } catch { setInvite('') ; setMsg('Could not make a code. Check your connection.') } finally { setBusy(false) }
   }
   const shareInvite = async () => {
     const url = `${location.origin}/join?code=${invite}`
-    const text = `Help with ${job.clientName.split(' ')[0]}'s move. Open ${url} and sign in. Code: ${invite}`
+    const text = inviteKind === 'scanner'
+      ? `Could you scan the rooms for ${job.clientName.split(' ')[0]}'s move? Open ${url} on your phone, sign in, and turn slowly in each room. Code: ${invite}`
+      : `Have a look at the list for ${job.clientName.split(' ')[0]}'s move and say what you'd like. Open ${url} and sign in. Code: ${invite}`
     if (navigator.share) { try { await navigator.share({ text }); return } catch { /* cancelled */ } }
     try { await navigator.clipboard.writeText(text); setMsg('Invite copied.') } catch { /* ignore */ }
   }
@@ -131,7 +135,8 @@ export default function Settings() {
 
       <div className="eyebrow mb-2 px-1">People</div>
       <div className="group mb-6">
-        <Row onClick={makeInvite} icon={<UserPlus size={18} />} label="Invite family" value="They see and add to this list" />
+        <Row onClick={() => makeInvite('family')} icon={<UserPlus size={18} />} label="Invite family" value="They say what they'd like" />
+        <Row onClick={() => makeInvite('scanner')} icon={<Camera size={18} />} label="Invite someone to scan" value="They scan, you sort" />
       </div>
 
       <div className="eyebrow mb-2 px-1">Camera</div>
@@ -161,8 +166,8 @@ export default function Settings() {
       <Sheet open={danger !== null} onOpenChange={(o) => { if (!o) setDanger(null) }}>
         {danger === 'invite' && (
           <div>
-            <h2 className="mb-2">Invite family</h2>
-            <p className="text-ink-2 text-[16px] mb-4">They sign in with their own email, enter this code, and see the same list. Good for a son or daughter helping from away.</p>
+            <h2 className="mb-2">{inviteKind === 'scanner' ? 'Invite someone to scan' : 'Invite family'}</h2>
+            <p className="text-ink-2 text-[16px] mb-4">{inviteKind === 'scanner' ? 'For someone at the house. They sign in, enter this code, and scan each room. Nothing is decided: every item comes to you to sort.' : 'They sign in with their own email, enter this code, and see the list. They can say what they would like. You make the final call.'}</p>
             <div className="text-center text-[36px] font-semibold tracking-[0.25em] tabular-nums mb-4" aria-live="polite">{busy ? '…' : invite || '—'}</div>
             <button className="btn" disabled={!invite} onClick={shareInvite}>Send the invite</button>
             <p className="text-ink-2 text-[14px] text-center mt-2">The code works for 30 days.</p>

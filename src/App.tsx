@@ -14,6 +14,7 @@ import Room from './pages/Room'
 import Rooms from './pages/Rooms'
 import Scan from './pages/Scan'
 import QuickScan from './pages/QuickScan'
+import Sort from './pages/Sort'
 import Settings from './pages/Settings'
 import Summary from './pages/Summary'
 import Start from './pages/Start'
@@ -82,6 +83,7 @@ export default function App() {
                 <Route path="/rooms/:roomId/new" element={<ItemForm />} />
                 <Route path="/items/:itemId" element={<ItemForm />} />
                 <Route path="/plan" element={<Plan />} />
+                <Route path="/sort" element={<Sort />} />
                 <Route path="/summary" element={<Summary />} />
                 <Route path="/details" element={<Details />} />
                 <Route path="/settings" element={<Settings />} />

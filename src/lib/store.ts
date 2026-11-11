@@ -44,6 +44,8 @@ class CloudStore {
   ready = false
   online = typeof navigator === 'undefined' ? true : navigator.onLine
   lastError = ''
+  /** How the signed-in person relates to the active job. The owner (or executor) decides. */
+  relation: 'owner' | 'family' | 'executor' | 'scanner' | 'staff' = 'owner'
   /** The last change the server refused, in words, for a gentle notice. */
   refused = ''
 
@@ -101,6 +103,9 @@ class CloudStore {
       sb.from('items').select('*').eq('job_id', id),
     ])
     if (!j) return
+    const me = this.db.user
+    this.relation = !me || j.owner_id === me.id ? 'owner' : me.role !== 'client' ? 'staff'
+      : ((await sb.from('job_members').select('relation').eq('job_id', id).eq('user_id', me.id).maybeSingle()).data?.relation ?? 'family')
     const pending = new Set(this.outbox.map((o) => o.id))
     const keepLocal = (list: { id: string }[]) => list.filter((x) => pending.has(x.id))
     this.db.job = pending.has(id) && this.db.job?.id === id ? this.db.job : jobFrom(j)
@@ -294,7 +299,7 @@ class CloudStore {
     if (error) throw new Error(error.message)
     await this.refresh(); await this.loadJob(data as string); return data as string
   }
-  async invite(relation: 'family' | 'executor' = 'family') {
+  async invite(relation: 'family' | 'executor' | 'scanner' = 'family') {
     const job = this.db.job; if (!job) throw new Error('No job')
     await this.flush()
     const { data, error } = await sb.from('job_invites').insert({ job_id: job.id, relation, created_by: this.db.user?.id }).select('code').single()

@@ -106,8 +106,19 @@ export default function QuickScan() {
       for (const i of data.items as Omit<Found, 'photo'>[]) list.push({ ...i, photo: await crop(frames.current[i.frame] ?? frames.current[0], i.box) })
       if (!list.length) throw new Error('We did not spot anything. Try again with more light, turning slowly.')
       frames.current = [] // the room photos are no longer needed
+      // Someone scanning for the owner doesn't decide anything: save the lot for sorting later.
+      if (store.relation === 'scanner') { saveAll(list); return }
       setFound(list); setIdx(0); setTag(null); setAskInside(null); setPhase('review')
     } catch (e) { setMsg((e as Error).message); setPhase('error') }
+  }
+
+  const saveAll = (list: Found[]) => {
+    list.forEach((f) => store.saveItem({
+      id: uid(), jobId: job.id, roomId: room.id, name: f.name.trim() || 'Item', size: f.size, tag: 'undecided', photo: f.photo,
+      description: f.description || undefined, prep: f.prep || undefined, source: 'quickscan', status: 'tagged', createdAt: now(), updatedAt: now(),
+    }))
+    setSaved((s) => ({ ...s, undecided: (s.undecided ?? 0) + list.length }))
+    setFound([]); setPhase('done')
   }
 
   const cur = found[idx]
@@ -219,6 +230,7 @@ export default function QuickScan() {
         <div className="sec mt-1">Where does it go?</div>
         <TagChips value={tag} onChange={pick} />
         <button className="btn btn-ghost mt-auto" onClick={next}>Not here, or a duplicate</button>
+        <button className="btn btn-secondary" onClick={() => saveAll(found.slice(idx))}>Save the rest, sort later</button>
       </>)}
 
       {askInside === 'ask' && tag && (<>

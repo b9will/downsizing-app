@@ -21,6 +21,11 @@ export default function Home() {
   const counts = TAG_ORDER.map((t) => ({ t, n: items.filter((i) => i.tag === t).length }))
   const daysLeft = Math.max(0, Math.ceil((new Date(job.tagDeadline).getTime() - Date.now()) / 86400000))
   const undecided = items.filter((i) => i.tag === 'undecided').length
+  const tellOwner = async () => {
+    const text = `I've scanned ${items.length} items at the house. They're ready for you to sort: ${location.origin}/sort`
+    if (navigator.share) { try { await navigator.share({ text }); return } catch { /* cancelled */ } }
+    try { await navigator.clipboard.writeText(text) } catch { /* ignore */ }
+  }
   const hasDetails = detailsComplete(job.details)
   const pending = useStore(() => store.pending())
   const online = useStore(() => store.online)
@@ -44,7 +49,7 @@ export default function Home() {
       <h1 className="mb-2">{items.length ? `${items.length} thing${items.length === 1 ? '' : 's'} sorted.${next ? ` ${next.name} next.` : ''}` : headline}</h1>
       {!items.length && <p className="lead mb-4">{body}</p>}
       {next && (
-        <Link to={`/rooms/${next.id}/scan`} className="flex items-center gap-4 p-4 mt-4 mb-6 rounded-3xl bg-ink text-white active:opacity-90">
+        <Link to={`/rooms/${next.id}/${store.relation === 'scanner' ? 'quick' : 'scan'}`} className="flex items-center gap-4 p-4 mt-4 mb-6 rounded-3xl bg-ink text-white active:opacity-90">
           <span className="w-14 h-14 rounded-2xl bg-white text-ink flex items-center justify-center shrink-0"><ScanLine size={28} /></span>
           <span><span className="block text-[21px] font-semibold" style={{ fontFamily: 'var(--font-display)' }}>Scan the {next.name.toLowerCase()}</span><span className="block text-[15px] text-white/75">Point at each item and tap.</span></span>
         </Link>
@@ -65,7 +70,8 @@ export default function Home() {
       </div>
       <div className="flex flex-col gap-2">
         <Link to="/rooms" className="card flex items-center gap-3 py-3"><span className="flex-1"><b className="block font-semibold">{done} of {rooms.length} rooms done</b><span className="block h-2 rounded-full bg-line overflow-hidden mt-2"><span className="block h-full bg-accent rounded-full" style={{ width: `${pct}%` }} /></span></span><ChevronRight size={18} className="text-ink-3" /></Link>
-        {undecided > 0 && <Link to="/plan" className="card flex items-center gap-3 py-3"><Dot tag="undecided" size={30} /><span className="flex-1"><b className="block font-semibold">{undecided} still "Not sure"</b><span className="text-ink-2 text-[14px]">Decide, or we'll help</span></span><ChevronRight size={18} className="text-ink-3" /></Link>}
+        {undecided > 0 && store.relation !== 'scanner' && <Link to="/sort" className="flex items-center gap-3 p-4 rounded-[22px] bg-ink text-white"><Dot tag="undecided" size={34} /><span className="flex-1"><b className="block font-semibold text-[17px]">{undecided} item{undecided === 1 ? '' : 's'} ready to sort</b><span className="text-white/75 text-[14px]">{store.relation === 'owner' || store.relation === 'executor' ? 'Tap a dot for each one' : `Say what you'd like. ${job.clientName.split(' ')[0]} decides.`}</span></span><ChevronRight size={18} /></Link>}
+        {store.relation === 'scanner' && <button onClick={tellOwner} className="flex items-center gap-3 p-4 rounded-[22px] bg-ink text-white text-left"><span className="flex-1"><b className="block font-semibold text-[17px]">Tell {job.clientName.split(' ')[0]} it's ready to sort</b><span className="text-white/75 text-[14px]">{items.length} items scanned in {done} of {rooms.length} rooms</span></span><ChevronRight size={18} /></button>}
         {!hasDetails && <Link to="/details" className="card flex items-center gap-3 py-3"><span className="flex-1"><b className="block font-semibold">{mode === 'self' ? 'Add your phone and address' : 'Add contact and addresses'}</b><span className="text-ink-2 text-[14px]">So we can plan the day</span></span><ChevronRight size={18} className="text-ink-3" /></Link>}
         {items.length > 0 && <Link to="/summary" className="card flex items-center gap-3 py-3"><span className="flex-1"><b className="block font-semibold">See your estimate</b><span className="text-ink-2 text-[14px]">Pick a service, then send</span></span><ChevronRight size={18} className="text-ink-3" /></Link>}
       </div>
