@@ -60,3 +60,13 @@ footer h4{font:600 13px Inter,sans-serif;letter-spacing:.08em;text-transform:upp
 .sticky-cta{position:fixed;left:0;right:0;bottom:0;z-index:15;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex}.sticky-cta .btn{flex:1}
 @media(min-width:860px){.sticky-cta{display:none}}@media(max-width:859px){body{padding-bottom:84px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}a.card{transition:none}}
+
+/* imagery */
+.photo.tall{aspect-ratio:4/5}@media(max-width:899px){.photo.tall{aspect-ratio:4/3}}
+.hero-art{position:relative;padding-bottom:40px}.hero-art .float{position:absolute;right:-6px;bottom:0;transform:scale(.6);transform-origin:bottom right;filter:drop-shadow(0 20px 40px rgba(0,0,0,.25))}
+@media(max-width:899px){.hero-art .float{transform:scale(.48)}}
+.card.img{padding:0;overflow:hidden;gap:0}.card.img .photo{border-radius:0;aspect-ratio:3/2}.card.img .in{padding:20px 22px 24px;display:flex;flex-direction:column;gap:8px}.card.img h3 .dot{width:16px;height:16px;vertical-align:0}
+.path{display:flex;flex-direction:column;border-radius:28px;overflow:hidden;background:#fff;text-decoration:none;transition:transform .15s}.path:hover{transform:translateY(-3px)}.path .photo{border-radius:0;aspect-ratio:16/10}.path .in{padding:26px 28px 30px;display:flex;flex-direction:column;gap:10px}.path h3{font-size:26px}.path p{color:var(--ink2)}.path .link{font-weight:600;margin-top:6px}.path .link::after{content:" \2192"}
+.quote{font:500 clamp(26px,4vw,44px)/1.18 'Space Grotesk',sans-serif;letter-spacing:-.02em;max-width:900px;text-wrap:balance}
+ol.steps{list-style:none;counter-reset:s;padding:0;margin:0;display:flex;flex-direction:column;gap:20px}ol.steps li{counter-increment:s;position:relative;padding-left:56px}ol.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:38px;height:38px;border-radius:50%;background:var(--ink);color:#fff;font:600 16px 'Space Grotesk',sans-serif;display:flex;align-items:center;justify-content:center}ol.steps p{color:var(--ink2);margin-top:4px}
+@media(prefers-reduced-motion:reduce){.path{transition:none}}
