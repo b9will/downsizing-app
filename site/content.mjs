@@ -186,7 +186,7 @@ export const ROLES = [
   { slug: 'driver', dot: 'move', name: 'Driver', type: 'On call to start',
     lead: 'You drive the truck and you run the job. The list is yours: every item, where it goes, and the photo that proves it got there.',
     does: ['Drive a rented box truck safely around Toronto and the GTA', 'Lead the crew on site and keep the day on plan', 'Work the job from the DOT list on a tablet, checking off each stop', 'Be the calm, friendly face the family deals with on the day'],
-    needs: ['A full Ontario G licence and a clean driving record', 'Experience driving a cube van or box truck', 'Comfortable with a phone or tablet', 'Able to lift and carry furniture safely'] },
+    needs: ['A full Ontario G licence and a clean driving record', 'A higher class, such as D or DZ, is an asset for our larger trucks', 'Experience driving a cube van or box truck', 'Comfortable with a phone or tablet', 'Able to lift and carry furniture safely'] },
   { slug: 'mover', dot: 'keep', name: 'Mover', type: 'On call to start',
     lead: 'You handle people\'s belongings as if they were your own grandparents\'. Careful hands matter more here than speed.',
     does: ['Pack, wrap, carry and place furniture and boxes', 'Follow the dot on each item: move, donate, sell, store or dispose', 'Load and unload at homes, charities and consignment houses', 'Leave every home tidy'],
