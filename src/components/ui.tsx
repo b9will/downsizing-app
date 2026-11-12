@@ -92,6 +92,17 @@ export function Toast({ show, text, onUndo }: { show: boolean; text: string; onU
   )
 }
 
+/** Lens switch for camera screens, like the phone's own camera: 0.5 and 1x side by side. */
+export function LensPill({ wide, onToggle }: { wide: boolean; onToggle: () => void }) {
+  const b = (on: boolean) => `h-9 min-w-9 px-2 rounded-full text-[13px] font-bold transition-colors ${on ? 'bg-white text-ink' : 'text-white'}`
+  return (
+    <div role="group" aria-label="Camera lens" className="flex items-center gap-0.5 p-1 rounded-full bg-black/45 backdrop-blur">
+      <button type="button" aria-pressed={wide} aria-label="Wide lens, 0.5 times" className={b(wide)} onClick={() => { if (!wide) onToggle() }}>.5</button>
+      <button type="button" aria-pressed={!wide} aria-label="Normal lens, 1 times" className={b(!wide)} onClick={() => { if (wide) onToggle() }}>1×</button>
+    </div>
+  )
+}
+
 /** "Is this a set?" Shown for things that usually come in multiples. */
 export function SetPicker({ name, value, onChange }: { name: string; value: number; onChange: (n: number) => void }) {
   const opts = [1, 2, 4, 6, 8]

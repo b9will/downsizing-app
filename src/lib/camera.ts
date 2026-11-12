@@ -73,7 +73,7 @@ export function useCamera(active: boolean, opts: { preferWide?: boolean } = {}) 
         // 2. Otherwise look for a separate ultra-wide camera.
         try {
           const cams = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'videoinput')
-          const uw = cams.find((d) => /ultra[\s-]?wide|ultragrand|0[.,]5/i.test(d.label) && !/front|avant/i.test(d.label))
+          const uw = cams.find((d) => /ultra[\s-]?(wide|grand|weit)|ultragrand|0[.,]5/i.test(d.label) && !/front|avant/i.test(d.label))
           if (uw && on) { setWide({ kind: 'device', id: uw.deviceId }); if (wantWide.current) { wantWide.current = false; setWideOn(true) } }
         } catch { /* no list available */ }
       })

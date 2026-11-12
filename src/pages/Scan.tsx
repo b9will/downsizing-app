@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import { X, Zap, ImagePlus, Check } from 'lucide-react'
-import { Dot, Segmented, SetPicker, Sheet, TagChips, Toast } from '../components/ui'
+import { Dot, Segmented, SetPicker, Sheet, TagChips, Toast, LensPill } from '../components/ui'
 import { ai } from '../lib/ai'
 import { snapshot, useCamera } from '../lib/camera'
 import { Paywall } from '../components/Paywall'
@@ -225,7 +225,7 @@ export default function Scan() {
           <div className="text-[15px] font-semibold">{room.name}</div>
           <div className="text-[13px] text-white/70">{count} tagged</div>
         </div>
-        {canWide ? <button onClick={toggleWide} aria-label={wideOn ? 'Switch to normal lens' : 'Switch to wide lens'} className="w-11 h-11 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-[14px] font-bold">{wideOn ? '0.5×' : '1×'}</button> : <div className="w-11 h-11 rounded-full bg-white/15 backdrop-blur flex items-center justify-center" aria-hidden><Zap size={18} className={state === 'live' && modelReady ? 'text-green-300' : 'text-white/50'} /></div>}
+        {canWide ? <LensPill wide={wideOn} onToggle={toggleWide} /> : <div className="w-11 h-11 rounded-full bg-white/15 backdrop-blur flex items-center justify-center" aria-hidden><Zap size={18} className={state === 'live' && modelReady ? 'text-green-300' : 'text-white/50'} /></div>}
       </div>
 
       {/* Bottom controls */}

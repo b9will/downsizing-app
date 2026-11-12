@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ChevronLeft } from 'lucide-react'
+import { Camera, ChevronLeft, Maximize2, X } from 'lucide-react'
 import { Page, Segmented, SetPicker, TagChips } from '../components/ui'
 import { ai } from '../lib/ai'
+import { fileToDataUrl } from '../lib/hooks'
 import { itemCatalog } from '../lib/itemCatalog'
 import { now, store, uid } from '../lib/store'
 import { isSetLike, type Item, type SizeClass, type Tag } from '../lib/types'
@@ -22,6 +23,14 @@ export default function ItemForm() {
   const [qty, setQty] = useState(existing?.qty ?? 1)
   const [recipient, setRecipient] = useState(existing?.familyRecipient ?? '')
   const [note, setNote] = useState(existing?.note ?? '')
+  const [photo, setPhoto] = useState(existing?.photo)
+  const [viewing, setViewing] = useState(false)
+  const file = useRef<HTMLInputElement>(null)
+  const retake = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; e.target.value = ''
+    if (!f) return
+    try { setPhoto(await fileToDataUrl(f)) } catch { /* keep the old photo */ }
+  }
   if (!job || !room) return <Page><Link to="/rooms">Back to rooms</Link></Page>
 
   const save = () => {
@@ -29,7 +38,7 @@ export default function ItemForm() {
     const item: Item = {
       ...existing,
       qty: qty > 1 ? qty : undefined,
-      id: existing?.id ?? uid(), jobId: job.id, roomId: room.id, name: name.trim(), tag, size, photo: existing?.photo, photoPath: existing?.photoPath,
+      id: existing?.id ?? uid(), jobId: job.id, roomId: room.id, name: name.trim(), tag, size, photo, photoPath: photo === existing?.photo ? existing?.photoPath : undefined,
       note: note.trim() || undefined, familyRecipient: tag === 'family' ? recipient.trim() || undefined : undefined,
       sticker: existing?.sticker, status: existing?.status ?? 'tagged', statusNote: existing?.statusNote,
       createdAt: existing?.createdAt ?? now(), updatedAt: now(),
@@ -44,7 +53,24 @@ export default function ItemForm() {
     <Page>
       <Link to={`/rooms/${room.id}`} className="back"><ChevronLeft size={18} /> {room.name}</Link>
       <h1 className="mb-5">{existing ? 'Edit item' : 'Add an item'}</h1>
-      {existing?.photo && <img src={existing.photo} alt="" className="w-full aspect-[4/3] object-cover rounded-xl mb-4" />}
+      <input ref={file} type="file" accept="image/*" capture="environment" className="hidden" onChange={retake} />
+      {photo ? (
+        <div className="mb-4">
+          <button type="button" onClick={() => setViewing(true)} aria-label="View the photo full screen" className="relative block w-full">
+            <img src={photo} alt={name || 'Item photo'} className="w-full aspect-[4/3] object-cover rounded-3xl bg-surface-2" />
+            <span className="absolute right-3 bottom-3 w-10 h-10 rounded-full bg-black/55 text-white flex items-center justify-center"><Maximize2 size={18} /></span>
+          </button>
+          <button type="button" className="btn btn-secondary btn-sm mt-2" onClick={() => file.current?.click()}><Camera size={18} /> Retake photo</button>
+        </div>
+      ) : (
+        <button type="button" className="btn btn-secondary mb-4" onClick={() => file.current?.click()}><Camera size={18} /> Add a photo</button>
+      )}
+      {viewing && photo && (
+        <div role="dialog" aria-label="Item photo" className="fixed inset-0 z-50 bg-black flex items-center justify-center" onClick={() => setViewing(false)}>
+          <img src={photo} alt={name || 'Item photo'} className="max-w-full max-h-full object-contain" />
+          <button type="button" aria-label="Close photo" className="absolute right-4 top-[calc(var(--spacing-safe-t)+12px)] w-11 h-11 rounded-full bg-white/20 text-white flex items-center justify-center"><X size={22} /></button>
+        </div>
+      )}
       <div className="flex flex-col gap-4">
         <div>
           <label className="eyebrow block mb-1" htmlFor="name">Item</label>
