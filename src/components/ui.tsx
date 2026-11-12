@@ -92,6 +92,20 @@ export function Toast({ show, text, onUndo }: { show: boolean; text: string; onU
   )
 }
 
+/** A finished PDF, waiting for one more tap. Phones only let us open the share sheet straight from a tap. */
+export function PdfReady({ file, onShare, onOpen, onClose }: { file: File; onShare: () => void; onOpen: () => void; onClose: () => void }) {
+  return (
+    <div role="status" className="rounded-[22px] bg-ink text-white p-4 flex flex-col gap-3">
+      <div><b className="block text-[17px] font-semibold">Your PDF is ready</b><span className="text-white/70 text-[14px] break-all">{file.name} · {Math.max(1, Math.round(file.size / 1024))} KB</span></div>
+      <div className="grid grid-cols-2 gap-2">
+        <button type="button" className="btn btn-sm h-12 bg-white text-ink" onClick={onShare}>Save or send</button>
+        <button type="button" className="btn btn-sm h-12 bg-white/20 text-white" onClick={onOpen}>Open it</button>
+      </div>
+      <button type="button" className="text-white/70 text-[14px] font-medium min-h-9" onClick={onClose}>Done</button>
+    </div>
+  )
+}
+
 /** Lens switch for camera screens, like the phone's own camera: 0.5 and 1x side by side. */
 export function LensPill({ wide, onToggle }: { wide: boolean; onToggle: () => void }) {
   const b = (on: boolean) => `h-9 min-w-9 px-2 rounded-full text-[13px] font-bold transition-colors ${on ? 'bg-white text-ink' : 'text-white'}`

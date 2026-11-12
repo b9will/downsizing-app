@@ -11,7 +11,8 @@ const txt = (s: unknown) => String(s ?? '').replace(/[‘’]/g, "'").replace(/[
 async function thumb(src: string | undefined, px = 320): Promise<string | null> {
   if (!src) return null
   try {
-    const blob = src.startsWith('data:') ? await (await fetch(src)).blob() : await (await fetch(src, { mode: 'cors' })).blob()
+    // A slow or dead photo link must never stall the whole PDF: give each one a few seconds, then leave the square empty.
+    const blob = await (await fetch(src, { signal: AbortSignal.timeout(7000) })).blob()
     const bmp = await createImageBitmap(blob)
     const side = Math.min(bmp.width, bmp.height)
     const c = document.createElement('canvas'); c.width = c.height = px
@@ -95,17 +96,23 @@ export async function buildPdf(job: Job, rooms: Room[], items: Item[], s: Scope 
   return doc.output('blob')
 }
 
-/** Share on phones (opens the share sheet: save to Files, print, email), download elsewhere. */
-export async function exportPdf(job: Job, rooms: Room[], items: Item[], s: Scope = { kind: 'all' }) {
+/** Build the PDF file. Delivering it is a separate step, because phones only allow sharing straight from a tap. */
+export async function makePdf(job: Job, rooms: Room[], items: Item[], s: Scope = { kind: 'all' }): Promise<File> {
   const blob = await buildPdf(job, rooms, items, s)
   const slug = (t: string) => t.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase()
   const name = `${slug(job.clientName) || 'home'}-${s.kind === 'all' ? 'inventory' : slug(scopeLabel(s))}-${new Date().toISOString().slice(0, 10)}.pdf`
-  const file = new File([blob], name, { type: 'application/pdf' })
-  if (navigator.share && navigator.canShare?.({ files: [file] })) {
-    try { await navigator.share({ files: [file], title: 'Home inventory' }); return } catch (e) { if ((e as Error).name === 'AbortError') return }
-  }
+  return new File([blob], name, { type: 'application/pdf' })
+}
+/** Open the phone's share sheet (save to Files, print, email). Must be called directly from a tap. False if this phone cannot share files. */
+export async function sharePdf(file: File): Promise<boolean> {
+  if (!navigator.share || !navigator.canShare?.({ files: [file] })) return false
+  try { await navigator.share({ files: [file], title: file.name }); return true } catch (e) { return (e as Error).name === 'AbortError' }
+}
+/** Open or download the PDF in the browser. */
+export function openPdf(file: File) {
   const url = URL.createObjectURL(file)
   const a = document.createElement('a')
-  a.href = url; a.download = name; a.click()
-  setTimeout(() => URL.revokeObjectURL(url), 4000)
+  a.href = url; a.download = file.name; a.target = '_blank'; a.rel = 'noopener'
+  document.body.appendChild(a); a.click(); a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }

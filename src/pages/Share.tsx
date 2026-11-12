@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, FileText } from 'lucide-react'
-import { Dot, Page } from '../components/ui'
+import { Dot, Page, PdfReady } from '../components/ui'
 import { exportCsv, itemsFor, recipientOf, type Scope } from '../lib/export'
 import { useStore } from '../lib/hooks'
-import { exportPdf } from '../lib/pdf'
+import { makePdf, openPdf, sharePdf } from '../lib/pdf'
 import { store } from '../lib/store'
 import { EMPTY_DETAILS, itemLabel, type Tag } from '../lib/types'
 
@@ -17,6 +17,7 @@ export default function SharePage() {
   const [open, setOpen] = useState<string | null>(null)
   const [busy, setBusy] = useState<'link' | 'pdf' | 'csv' | null>(null)
   const [note, setNote] = useState('')
+  const [pdf, setPdf] = useState<File | null>(null)
   if (!job) return null
 
   const d = { ...EMPTY_DETAILS, ...job.details }
@@ -35,7 +36,7 @@ export default function SharePage() {
   const run = async (kind: 'link' | 'pdf' | 'csv', w: { scope: Scope; title: string }) => {
     setBusy(kind); setNote('')
     try {
-      if (kind === 'pdf') await exportPdf(job, rooms, items, w.scope)
+      if (kind === 'pdf') setPdf(await makePdf(job, rooms, items, w.scope))
       else if (kind === 'csv') await exportCsv(job, rooms, items, w.scope)
       else {
         const url = await store.guestLink(w.scope, w.title)
@@ -43,7 +44,7 @@ export default function SharePage() {
         if (navigator.share) { try { await navigator.share({ title: w.title, text, url }); return } catch { /* cancelled */ } }
         await navigator.clipboard?.writeText(url); setNote('Link copied. It works for 30 days.')
       }
-    } catch { setNote(kind === 'link' ? 'Could not make a link. Check your connection.' : 'That did not work. Please try again.') } finally { setBusy(null) }
+    } catch (e) { console.error('share', e); setNote(kind === 'link' ? 'Could not make a link. Check your connection.' : 'That did not work. Please try again.') } finally { setBusy(null) }
   }
 
   const cur = open === 'all' ? { key: 'all', scope: { kind: 'all' } as Scope, tag: null, title: 'Your full inventory', blurb: 'A record of the whole home: every photo, room by room, with where each thing is going.' } : people.find((p) => p.key === open)
@@ -52,7 +53,7 @@ export default function SharePage() {
     const shots = list.filter((i) => i.photo).slice(0, 6)
     return (
       <Page className="flex flex-col gap-4">
-        <button onClick={() => { setOpen(null); setNote('') }} className="flex items-center gap-2 text-ink-2 font-medium self-start min-h-11"><span className="w-11 h-11 rounded-full bg-surface-2 flex items-center justify-center text-ink"><ChevronLeft size={22} /></span> Share</button>
+        <button onClick={() => { setOpen(null); setNote(''); setPdf(null) }} className="flex items-center gap-2 text-ink-2 font-medium self-start min-h-11"><span className="w-11 h-11 rounded-full bg-surface-2 flex items-center justify-center text-ink"><ChevronLeft size={22} /></span> Share</button>
         <div className="flex items-center gap-3">
           {cur.tag ? <Dot tag={cur.tag} size={56} /> : <span className="w-14 h-14 rounded-full bg-ink text-white flex items-center justify-center shrink-0"><FileText size={24} /></span>}
           <div className="min-w-0"><h1 className="text-[28px] leading-tight">{cur.title}</h1><p className="text-ink-2 text-[15px]">{count(cur.scope)} piece{count(cur.scope) === 1 ? '' : 's'}{d.currentAddress && cur.key !== 'all' ? ` · pickup at ${d.currentAddress}` : ''}</p></div>
@@ -64,6 +65,7 @@ export default function SharePage() {
         </ul>
         <p className="text-ink-2 text-[15px]">{cur.blurb}</p>
         {note && <p role="status" className="text-accent font-semibold text-center">{note}</p>}
+        {pdf && <PdfReady file={pdf} onShare={async () => { if (!(await sharePdf(pdf))) openPdf(pdf) }} onOpen={() => openPdf(pdf)} onClose={() => setPdf(null)} />}
         <div className="flex flex-col gap-2 mt-auto">
           {cur.key === 'all'
             ? <button className="btn" disabled={busy !== null} onClick={() => run('pdf', cur)}>{busy === 'pdf' ? 'Making your PDF…' : 'Save as PDF'}</button>

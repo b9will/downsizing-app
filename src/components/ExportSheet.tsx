@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { FileSpreadsheet, FileText, Link2 } from 'lucide-react'
 import { Sheet, TagPill } from './ui'
 import { exportCsv, itemsFor, recipientOf, scopeLabel, type Scope } from '../lib/export'
-import { exportPdf } from '../lib/pdf'
+import { makePdf, openPdf, sharePdf } from '../lib/pdf'
+import { PdfReady } from './ui'
 import { store } from '../lib/store'
 import { type Item, type Job, type Room, type Tag } from '../lib/types'
 
@@ -18,13 +19,15 @@ export function ExportSheet({ open, onOpenChange, job, rooms, items }: { open: b
   const recipients = [...new Set(items.filter((i) => i.tag === 'family').map(recipientOf))].sort()
 
   const [note, setNote] = useState('')
+
+  const [pdfFile, setPdfFile] = useState<File | null>(null)
   const go = async (s: Scope, key: string) => {
     setBusy(key)
     try { await exportCsv(job, rooms, items, s) } finally { setBusy(null) }
   }
   const pdf = async (s: Scope, key: string) => {
     setBusy(`pdf-${key}`); setNote('')
-    try { await exportPdf(job, rooms, items, s) } catch { setNote('Could not make the PDF. Please try again.') } finally { setBusy(null) }
+    try { setPdfFile(await makePdf(job, rooms, items, s)) } catch (e) { console.error('pdf', e); setNote('Could not make the PDF. Please try again.') } finally { setBusy(null) }
   }
   /** A no-login web page for the charity, consignment house or relative. Always up to date. */
   const link = async (s: Scope, key: string, label: string) => {
@@ -55,6 +58,7 @@ export function ExportSheet({ open, onOpenChange, job, rooms, items }: { open: b
       <h2 className="mb-1">Export a list</h2>
       <p className="text-ink-2 text-[15px] mb-3"><b className="text-ink">Link</b> sends a web page with photos that stays up to date, no login needed. <b className="text-ink">PDF</b> is a printable record with photos. <b className="text-ink">CSV</b> is a spreadsheet.</p>
       <button type="button" className="btn mb-3" disabled={!items.length || busy !== null} onClick={() => pdf({ kind: 'all' }, 'top')}><FileText size={20} />{busy === 'pdf-top' ? 'Making your PDF…' : 'Inventory PDF with photos'}</button>
+      {pdfFile && <div className="mb-3"><PdfReady file={pdfFile} onShare={async () => { if (!(await sharePdf(pdfFile))) openPdf(pdfFile) }} onOpen={() => openPdf(pdfFile)} onClose={() => setPdfFile(null)} /></div>}
       {note && <p role="status" className="text-accent font-medium text-[15px] mb-2">{note}</p>}
       <Row s={{ kind: 'all' }} k="all" label="Everything" sub="Full inventory with all details, for our team" />
       {ORDER.filter((t) => t !== 'family').map((t) => <Row key={t} s={{ kind: 'tag', tag: t }} k={t} label={WHO[t]} pill={t} />)}
