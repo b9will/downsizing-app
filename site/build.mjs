@@ -22,7 +22,7 @@ const ICON = {
 }
 const withIcons = (html) => html.replace(/<span class="dot (\w+)"><\/span>/g, (m, t) => ICON[t] ? `<span class="dot ${t}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICON[t]}"/></svg></span>` : m)
 // Every button to the app carries the page it came from, so we can see which pages bring people in.
-const scan = (src, label = 'Scan a room free', cls = '') => `<a class="btn ${cls}" href="${APP}/login?src=${encodeURIComponent(src)}">${label}</a>`
+const scan = (src, label = 'Scan a room free', cls = '') => `<a class="btn go ${cls}" href="${APP}/login?src=${encodeURIComponent(src)}">${label}</a>`
 const dots = (list = ['move', 'donate', 'sell', 'family']) => `<div class="dots" aria-hidden="true">${list.map((d) => `<span class="dot ${d}"></span>`).join('')}</div>`
 const U = (id, w) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=70`
 /** A stock photo by key. `eager` for the one at the top of a page. */
@@ -78,6 +78,7 @@ ${[org, site, ...ld].map((j) => `<script type="application/ld+json">${JSON.strin
 <a class="logo" href="/" aria-label="${BRAND.short}, ${BRAND.long}: home"><span class="dot move"></span>${BRAND.short}<small>Downsizing<br>Operations Toronto</small></a>
 <nav class="main" aria-label="Main"><a href="/how-it-works">How it works</a><a href="/services">Services</a><a href="/pricing">Pricing</a><a href="/guides">Guides</a><a href="/contact">Contact</a></nav>
 ${scan(src, 'Scan a room free', 'sm')}
+<details class="menu"><summary aria-label="Menu"><span></span></summary><nav aria-label="Menu"><a href="/how-it-works">How it works</a><a href="/plan-ahead">Planning ahead</a><a href="/moving-soon">Moving soon</a><a href="/services">Services</a><a href="/pricing">Pricing</a><a href="/guides">Guides</a><a href="/faq">Questions</a><a href="/contact">Talk to a person</a></nav></details>
 </div></header>
 <main>${body}</main>
 <footer><div class="wrap"><div class="cols">
@@ -87,7 +88,9 @@ ${scan(src, 'Scan a room free', 'sm')}
 <div><h4>Company</h4><ul><li><a href="/how-it-works">How it works</a></li><li><a href="/plan-ahead">Planning ahead</a></li><li><a href="/moving-soon">Moving soon</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/app">The app</a></li><li><a href="/guides">Guides</a></li><li><a href="/faq">Questions</a></li><li><a href="/contact">Contact</a></li></ul></div>
 </div><p class="muted small" style="margin-top:36px">© ${new Date().getFullYear()} ${BRAND.long}. Prices shown are guides; your scan gives you your own. Photos are stock images from Unsplash, not our clients.</p></div></footer>
 <div class="sticky-cta">${scan(src)}</div>
+<script>(()=>{const s=document.querySelector('.sticky-cta'),end=document.querySelector('.band')||document.querySelector('footer');let near=false;if(end&&'IntersectionObserver'in window)new IntersectionObserver(e=>{near=e[0].isIntersecting;f()}).observe(end);const f=()=>document.body.classList.toggle('show-cta',scrollY>620&&!near);addEventListener('scroll',f,{passive:true});f()})()</script>
 <script src="/chat.js" defer></script>
+<script defer src="/_vercel/insights/script.js"></script>
 </body></html>`
   const file = join(out, path === '/' ? 'index.html' : `${path.slice(1)}.html`)
   mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, withIcons(html)); pages.push(path)

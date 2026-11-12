@@ -142,6 +142,11 @@ export const FAQ = [
   ['Can someone else do the scanning?', 'Yes. Send a helper an invite. They only need their first name and the code, and all they can do is scan. You decide where everything goes.'],
   ['Who can see my photos?', 'You, the people you invite, and our team. Charities and dealers only see the items you send them. We never sell or share them, and we delete them whenever you ask.'],
   ['What areas do you cover?', 'Toronto and the surrounding GTA, including Etobicoke, Mississauga, Oakville, Burlington, North York, Scarborough, Vaughan, Markham and Brampton.'],
+  ['What phone do I need?', 'Any recent iPhone or Android phone. The app opens in the phone\'s browser, so there is nothing to download.'],
+  ['How long does it all take?', 'Scanning a room takes a few minutes. Deciding is the slow part, usually two to six weeks. The move and clear-out itself is typically one to three days.'],
+  ['When do I pay?', 'The first room is free. The Home pass is billed monthly. If you book a move, a $100 deposit holds your date, and the rest is set out in your plan before you approve it.'],
+  ['How do I cancel the Home pass?', 'Any time. Send a note through the contact page and we will cancel it for you. You can save your inventory as a PDF first.'],
+  ['Do I need to be there on move day?', 'Someone should be there to let the crew in and do the final walkthrough. It can be you, a family member or a helper you trust.'],
   ['Can I talk to a person?', 'Yes. Leave your number on the contact form and a person will call you back. The assistant on this site handles quick questions; anything it cannot answer goes to a person.'],
 ]
 

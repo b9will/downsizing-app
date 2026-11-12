@@ -86,3 +86,26 @@ ol.steps{list-style:none;counter-reset:s;padding:0;margin:0;display:flex;flex-di
 .chat-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 10px}.chat-chips:empty{display:none}.chat-chips button{border:1.5px solid var(--line);background:#fff;border-radius:18px;padding:8px 12px;font:500 14px Inter,sans-serif;cursor:pointer;color:var(--ink)}.chat-chips button:hover{border-color:var(--ink)}
 .chat-form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}.chat-form input{flex:1;min-width:0;padding:10px 14px;border-radius:22px;font-size:16px}
 @media(max-width:859px){.chat-fab{bottom:calc(84px + env(safe-area-inset-bottom));right:14px;height:48px;padding:0 16px;font-size:15px}.chat-panel{right:12px;bottom:12px}}
+
+/* One colour for the one thing we want people to do. Black is kept for the closing band. */
+.btn.go{background:var(--move)}.btn.go:hover{background:#1a43c2}
+.band .btn.go,.plan.hi .btn.go{background:#fff;color:var(--ink)}.band .btn.go:hover,.plan.hi .btn.go:hover{background:#f0f0ee}
+.btn:focus-visible{outline-color:var(--ink)}
+/* phone: a menu, a quieter header, and the bottom bar only once they have scrolled */
+.menu{position:relative;margin-left:auto}.menu summary{list-style:none;width:44px;height:44px;border-radius:50%;background:var(--soft);display:flex;align-items:center;justify-content:center;cursor:pointer}.menu summary::-webkit-details-marker{display:none}.menu summary::after{content:none}
+.menu summary span,.menu summary span::before,.menu summary span::after{display:block;width:18px;height:2px;background:var(--ink);border-radius:2px;position:relative}.menu summary span::before,.menu summary span::after{content:"";position:absolute;left:0}.menu summary span::before{top:-6px}.menu summary span::after{top:6px}
+.menu nav{position:absolute;right:0;top:54px;width:min(280px,86vw);background:#fff;border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,.2);padding:10px;display:flex;flex-direction:column}.menu nav a{padding:13px 14px;border-radius:12px;text-decoration:none;font-weight:600;font-size:17px}.menu nav a:hover{background:var(--soft)}
+details.menu{border:0;padding:0}
+@media(min-width:860px){.menu{display:none}}
+@media(max-width:859px){
+  header.top .btn{display:none}
+  body{padding-bottom:0}
+  .sticky-cta{transform:translateY(110%);transition:transform .25s ease;padding:8px 14px calc(8px + env(safe-area-inset-bottom))}.show-cta .sticky-cta{transform:none}
+  .sticky-cta .btn{height:48px;font-size:16px}
+  .chat-fab{bottom:16px;width:52px;height:52px;padding:0;justify-content:center;border-radius:50%;background:#fff;color:var(--ink);box-shadow:0 6px 22px rgba(0,0,0,.22),inset 0 0 0 1.5px var(--line);transition:bottom .25s ease}.chat-fab span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .show-cta .chat-fab{bottom:calc(74px + env(safe-area-inset-bottom))}
+  .hero .cta .btn{flex:1 1 100%}.hero .cta .btn.alt{background:transparent;height:44px;text-decoration:underline;text-underline-offset:4px}
+  .cta .btn.alt{height:48px}
+}
+@media(prefers-reduced-motion:reduce){.sticky-cta,.chat-fab{transition:none}}
+.menu[open] summary::after{content:none}
