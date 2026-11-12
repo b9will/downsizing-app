@@ -10,7 +10,7 @@ import { sb } from '../../lib/supabase'
 // Office staff (role "admin") only. The database refuses these reads for everyone else, crew included.
 type Tab = 'overview' | 'leads' | 'homes' | 'questions'
 type Overview = { signups: number; homes: number; scanned: number; passes: number; booked: number; deposits: number; leads: number; leads_new: number; questions: number; sources: { src: string; n: number }[] }
-type Lead = { id: string; created_at: string; name: string; email: string | null; phone: string | null; area: string | null; message: string | null; page: string | null; status: string; kind?: string; role?: string | null }
+type Lead = { id: string; created_at: string; name: string; email: string | null; phone: string | null; area: string | null; message: string | null; page: string | null; status: string; kind?: string; role?: string | null; ref_code?: string | null }
 type HomeRow = { id: string; client_name: string; status: string; plan: string; deposit_paid_at: string | null; move_date: string; created_at: string; items: number; undecided: number; rooms: number; src: string; owner_email: string }
 type Question = { id: number; created_at: string; page: string | null; question: string; reply: string | null; turn: number }
 
@@ -112,14 +112,14 @@ export default function Office() {
           <div className="flex flex-col gap-3">
             {leads.map((l) => (
               <article key={l.id} className={`card flex flex-col gap-2 ${l.status !== 'new' ? 'opacity-70' : ''}`}>
-                <div className="flex flex-wrap items-baseline justify-between gap-2"><b className="text-[19px] font-semibold">{l.name}{l.kind === 'application' && <span className="ml-2 align-middle text-[12px] font-bold uppercase tracking-wide bg-[#7e22ce] text-white rounded-full px-2 py-0.5">Applying: {l.role || 'role not given'}</span>}</b><span className="text-ink-2 text-[14px]">{when(l.created_at)}{l.area ? ` · ${l.area}` : ''}</span></div>
+                <div className="flex flex-wrap items-baseline justify-between gap-2"><b className="text-[19px] font-semibold">{l.name}{l.kind === 'partner' && <span className="ml-2 align-middle text-[12px] font-bold uppercase tracking-wide bg-[#ea580c] text-white rounded-full px-2 py-0.5">{l.role === 'realtor' ? 'Realtor' : 'Partner'} · code {l.ref_code}</span>}{l.kind === 'application' && <span className="ml-2 align-middle text-[12px] font-bold uppercase tracking-wide bg-[#7e22ce] text-white rounded-full px-2 py-0.5">Applying: {l.role || 'role not given'}</span>}</b><span className="text-ink-2 text-[14px]">{when(l.created_at)}{l.area ? ` · ${l.area}` : ''}</span></div>
                 <div className="flex flex-wrap gap-2">
                   {l.phone && <a href={`tel:${l.phone}`} className="btn btn-sm h-11">Call {l.phone}</a>}
                   {l.email && <a href={`mailto:${l.email}`} className="btn btn-secondary btn-sm h-11">{l.email}</a>}
                 </div>
                 {l.message && <p className="text-[16px] whitespace-pre-wrap">{l.message}</p>}
                 <div className="flex flex-wrap items-center gap-2 pt-1" role="group" aria-label={`Status for ${l.name}`}>
-                  {[['new', 'New'], ['contacted', 'Contacted'], ['won', l.kind === 'application' ? 'Hired' : 'Booked'], ['closed', 'Closed']].map(([k, label]) => <button key={k} onClick={() => setLead(l, k)} aria-pressed={l.status === k} className={`h-9 px-3.5 rounded-full text-[14px] font-semibold ${l.status === k ? 'bg-ink text-white' : 'bg-surface text-ink-2'}`}>{label}</button>)}
+                  {[['new', 'New'], ['contacted', 'Contacted'], ['won', l.kind === 'application' ? 'Hired' : l.kind === 'partner' ? 'Active' : 'Booked'], ['closed', 'Closed']].map(([k, label]) => <button key={k} onClick={() => setLead(l, k)} aria-pressed={l.status === k} className={`h-9 px-3.5 rounded-full text-[14px] font-semibold ${l.status === k ? 'bg-ink text-white' : 'bg-surface text-ink-2'}`}>{label}</button>)}
                   {l.page && <span className="text-ink-3 text-[13px] ml-auto truncate max-w-[50%]">from {l.page}</span>}
                 </div>
               </article>

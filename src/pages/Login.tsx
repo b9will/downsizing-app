@@ -10,7 +10,8 @@ export default function Login() {
   const [params] = useSearchParams()
   const next = params.get('next')?.startsWith('/') ? params.get('next')! : '/'
   // Which website page sent them here ("area-etobicoke-hero"), kept so we can see what brings people in.
-  const src = (() => { try { const s = params.get('src'); if (s) localStorage.setItem('dot.src', s.slice(0, 80)); return localStorage.getItem('dot.src') ?? undefined } catch { return undefined } })()
+  // A referral partner's code comes first ("ref-AB12CD/for-realtors"), so the office can see who to thank.
+  const src = (() => { try { const s = params.get('src'), r = params.get('ref'); if (r && /^[A-Za-z0-9]{6}$/.test(r)) localStorage.setItem('dot.ref', r.toUpperCase()); if (s) localStorage.setItem('dot.src', s.slice(0, 60)); const ref = localStorage.getItem('dot.ref'), page = localStorage.getItem('dot.src'); return ref ? `ref-${ref}/${page ?? 'direct'}` : page ?? undefined } catch { return undefined } })()
   const [step, setStep] = useState<'email' | 'code' | 'password'>('email')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
