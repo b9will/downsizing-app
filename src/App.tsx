@@ -7,6 +7,7 @@ import { cameraGrantedBefore } from './lib/camera'
 import CameraSetup from './pages/CameraSetup'
 import Details from './pages/Details'
 import Home from './pages/Home'
+import Join from './pages/Join'
 import ItemForm from './pages/ItemForm'
 import Login from './pages/Login'
 import Plan from './pages/Plan'
@@ -46,6 +47,8 @@ function ClientOnly() {
   const loc = useLocation()
   if (isStaff(user) && !loc.pathname.startsWith('/settings')) return <Navigate to="/crew" replace />
   if (!job && !isStaff(user)) return <Navigate to="/start" replace />
+  // Scan-only helpers can scan rooms and nothing else.
+  if (store.relation === 'scanner' && /^\/(plan|book|share|sort|summary|settings|details|items)/.test(loc.pathname)) return <Navigate to="/" replace />
   return <Outlet />
 }
 function StaffOnly() {
@@ -62,9 +65,9 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/g/:token" element={<Guest />} />
+        <Route path="/join" element={<Join />} />
         <Route element={<RequireAuth />}>
           <Route path="/start" element={<Start />} />
-          <Route path="/join" element={<Start />} />
           <Route path="/setup" element={<CameraSetup />} />
           <Route element={<StaffOnly />}>
             <Route path="/crew" element={<CrewHome />} />

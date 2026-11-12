@@ -50,7 +50,7 @@ export default function Settings() {
   const shareInvite = async () => {
     const url = `${location.origin}/join?code=${invite}`
     const text = inviteKind === 'scanner'
-      ? `Could you scan the rooms for ${job.clientName.split(' ')[0]}'s move? Open ${url} on your phone, sign in, and turn slowly in each room. Code: ${invite}`
+      ? `Could you scan the rooms for ${job.clientName.split(' ')[0]}'s move? Open ${url} on your phone and enter your first name. Code: ${invite}`
       : `Have a look at the list for ${job.clientName.split(' ')[0]}'s move and say what you'd like. Open ${url} and sign in. Code: ${invite}`
     if (navigator.share) { try { await navigator.share({ text }); return } catch { /* cancelled */ } }
     try { await navigator.clipboard.writeText(text); setMsg('Invite copied.') } catch { /* ignore */ }

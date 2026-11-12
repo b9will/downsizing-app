@@ -15,6 +15,8 @@ const side = [
 export default function Shell() {
   const loc = useLocation()
   const booked = useStore(() => { const s = store.getJob()?.status; return !!s && s !== 'tagging' })
+  const helper = useStore(() => store.relation === 'scanner')
+  const off = (label: string, Icon: typeof Home) => <span key={label} aria-disabled className="flex flex-col items-center justify-center gap-1 h-16 text-[13px] font-medium text-ink-3 opacity-40"><Icon size={22} strokeWidth={1.8} />{label}</span>
   return (
     <div className="min-h-full flex flex-col">
       <main className="flex-1">
@@ -24,7 +26,9 @@ export default function Shell() {
       </main>
       <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 bg-surface border-t border-line pb-[var(--spacing-safe-b)]">
         <div className="grid grid-cols-5 max-w-xl mx-auto">
-          {side.map((t) => t ? (
+          {side.map((t) => helper && (!t || t.to === '/plan' || t.to === '/share') ? (
+            t ? off(t.label, t.Icon) : <span key="book" aria-disabled className="flex flex-col items-center h-16 opacity-30"><span className="-mt-6 w-[68px] h-[68px] rounded-full flex flex-col items-center justify-center text-white bg-ink-3 shadow-[0_0_0_5px_var(--color-surface)]"><Truck size={24} /><span className="text-[12px] font-bold leading-none mt-0.5">Book</span></span></span>
+          ) : t ? (
             <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => `flex flex-col items-center justify-center gap-1 h-16 text-[13px] font-medium ${isActive ? 'text-ink font-bold' : 'text-ink-2'}`}>
               {({ isActive }) => (<><t.Icon size={22} strokeWidth={isActive ? 2.2 : 1.8} />{t.label}</>)}
             </NavLink>

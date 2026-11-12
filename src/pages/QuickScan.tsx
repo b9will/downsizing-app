@@ -45,8 +45,11 @@ export default function QuickScan() {
   const frames = useRef<string[]>([])
   const sectors = useRef<Set<number>>(new Set())
   const heading = useRef<number | null>(null)
+  const pendingAt = useRef({ s: -1, t: 0 })
   const [progress, setProgress] = useState(0)
   const [hasCompass, setHasCompass] = useState(false)
+  const [facing, setFacing] = useState<number | null>(null) // which slice of the room the phone points at
+  const [, setTick] = useState(0)
   const [found, setFound] = useState<Found[]>([])
   const [idx, setIdx] = useState(0)
   const [tag, setTag] = useState<Tag | null>(null)
@@ -72,8 +75,12 @@ export default function QuickScan() {
       const v = video.current; if (!v || frames.current.length >= MAX_FRAMES) return
       if (heading.current != null) {
         const s = Math.floor((((heading.current % 360) + 360) % 360) / (360 / SECTORS))
+        setFacing(s)
         if (sectors.current.has(s)) return
-        sectors.current.add(s)
+        // Hold a beat on a new slice so the picture is sharp, and so the view visibly turns from grey to green.
+        if (pendingAt.current.s !== s) { pendingAt.current = { s, t: Date.now() }; return }
+        if (Date.now() - pendingAt.current.t < 350) return
+        sectors.current.add(s); setTick((n) => n + 1)
       }
       const f = snapshot(v, 768, 0.6); if (!f) return
       frames.current.push(f)
@@ -89,7 +96,7 @@ export default function QuickScan() {
     // iPhones ask permission for motion sensors, and only from a tap.
     const D = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }
     try { if (typeof D?.requestPermission === 'function') await D.requestPermission() } catch { /* fall back to timed capture */ }
-    frames.current = []; sectors.current = new Set(); setProgress(0); setPhase('scan')
+    frames.current = []; sectors.current = new Set(); setFacing(null); setProgress(0); setPhase('scan')
   }
 
   const finish = async () => {
@@ -141,6 +148,24 @@ export default function QuickScan() {
     return (
       <div className="fixed inset-0 bg-black text-white overflow-hidden">
         <video ref={video} className="absolute inset-0 w-full h-full object-cover" muted playsInline autoPlay />
+        {/* Paint the room: the view is grey where we have not looked yet and washes green once that slice is captured. */}
+        {phase === 'scan' && facing !== null && (
+          <div aria-hidden className="absolute inset-0 pointer-events-none transition-[background-color,box-shadow] duration-500" style={sectors.current.has(facing)
+            ? { backgroundColor: 'rgba(34,197,94,0.22)', boxShadow: 'inset 0 0 0 6px rgba(34,197,94,0.9), inset 0 0 90px rgba(34,197,94,0.45)' }
+            : { backgroundColor: 'rgba(90,90,90,0.38)', boxShadow: 'inset 0 0 0 6px rgba(255,255,255,0.35)' }} />
+        )}
+        {phase === 'scan' && hasCompass && (
+          <div className="absolute inset-x-5 top-[calc(var(--spacing-safe-t)+72px)]" role="img" aria-label={`${sectors.current.size} of ${SECTORS} parts of the room captured`}>
+            <div className="flex gap-1">
+              {Array.from({ length: SECTORS }, (_, s) => (
+                <span key={s} className={`relative flex-1 h-3 rounded-full transition-colors duration-300 ${sectors.current.has(s) ? 'bg-[#22c55e]' : 'bg-white/30'}`}>
+                  {facing === s && <span className="absolute left-1/2 -translate-x-1/2 -bottom-3 w-0 h-0 border-x-[6px] border-x-transparent border-b-[8px] border-b-white" />}
+                </span>
+              ))}
+            </div>
+            <p className="text-center text-[14px] font-semibold mt-4 drop-shadow">{facing !== null && sectors.current.has(facing) ? (progress >= 1 ? 'All green. You have the whole room.' : 'Got this part. Turn to the grey.') : 'Hold steady…'}</p>
+          </div>
+        )}
         <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-[calc(var(--spacing-safe-t)+10px)] pb-8 bg-gradient-to-b from-black/60 to-transparent">
           <button aria-label="Close" onClick={() => nav(`/rooms/${room.id}`)} className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center"><X size={22} /></button>
           <span className="text-[18px] font-semibold" style={{ fontFamily: 'var(--font-display)' }}>{room.name}</span>
@@ -158,12 +183,12 @@ export default function QuickScan() {
             <>
               <svg width="120" height="120" viewBox="0 0 132 132" role="img" aria-label={`${pct} percent of the room scanned`}>
                 <circle cx="66" cy="66" r="56" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="12" />
-                <circle cx="66" cy="66" r="56" fill="none" stroke="#facc15" strokeWidth="12" strokeLinecap="round" strokeDasharray={`${progress * 352} 352`} transform="rotate(-90 66 66)" style={{ transition: 'stroke-dasharray 0.3s' }} />
-                <text x="66" y="74" textAnchor="middle" fill="#fff" fontSize="26" fontWeight="600">{pct}%</text>
+                <circle cx="66" cy="66" r="56" fill="none" stroke={progress >= 1 ? '#22c55e' : '#facc15'} strokeWidth="12" strokeLinecap="round" strokeDasharray={`${progress * 352} 352`} transform="rotate(-90 66 66)" style={{ transition: 'stroke-dasharray 0.3s' }} />
+                <text x="66" y="74" textAnchor="middle" fill={progress >= 1 ? '#22c55e' : '#fff'} fontSize="26" fontWeight="600">{pct}%</text>
               </svg>
               <p className="text-[20px] font-semibold" role="status" style={{ fontFamily: 'var(--font-display)' }}>{progress >= 1 ? 'Got the whole room' : progress > 0.5 ? 'Keep turning, nearly there' : 'Keep turning slowly'}</p>
               {msg && <p className="text-[15px] text-yellow-300" role="alert">{msg}</p>}
-              <button className={`btn ${progress >= 1 ? 'bg-white text-ink' : 'bg-white/20 text-white'}`} onClick={finish}>{progress >= 1 ? 'List what you saw' : 'Finish early'}</button>
+              <button className={`btn ${progress >= 1 ? 'bg-[#22c55e] text-white' : 'bg-white/20 text-white'}`} onClick={finish}>{progress >= 1 ? 'List what you saw' : 'Finish early'}</button>
             </>
           )}
         </div>

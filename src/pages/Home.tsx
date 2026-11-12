@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ChevronRight, ScanLine, Settings as SettingsIcon } from 'lucide-react'
+import { Check, ChevronRight, ScanLine, Settings as SettingsIcon } from 'lucide-react'
 import { Dot, Page } from '../components/ui'
 import { ai } from '../lib/ai'
 import { useStore } from '../lib/hooks'
@@ -17,6 +17,7 @@ export default function Home() {
   const step = ai.nextStep(job, rooms, items)
   const next = rooms.find((r) => r.id === step.roomId)
   const done = rooms.filter((r) => r.done).length
+  const helper: boolean = store.relation === 'scanner'
   const pct = rooms.length ? Math.round((done / rooms.length) * 100) : 0
   const counts = TAG_ORDER.map((t) => ({ t, n: items.filter((i) => i.tag === t).length }))
   const daysLeft = Math.max(0, Math.ceil((new Date(job.tagDeadline).getTime() - Date.now()) / 86400000))
@@ -36,6 +37,37 @@ export default function Home() {
   const body = mode === 'estate' && !items.length ? `Let's start with the ${next?.name.toLowerCase() ?? 'first room'}. Photograph each item and choose where it goes. Nothing leaves until you approve the plan.`
     : mode === 'helper' && !items.length ? `You're helping ${job.clientName.split(' ')[0]}. Start in the ${next?.name.toLowerCase() ?? 'first room'}. You can invite other family members from Settings.` : step.body
 
+  if (helper) {
+    const owner = job.clientName.split(' ')[0]
+    return (
+      <Page className="flex flex-col gap-3">
+        <span className="text-[15px] font-semibold text-ink-2">Scanning for {owner}</span>
+        <h1>{done === rooms.length && rooms.length ? 'Every room is scanned' : 'Scan each room'}</h1>
+        <p className="lead">Pick a room. Use the room scan to get everything in one turn, or add things one at a time. {owner} decides where it all goes.</p>
+        <div className="flex flex-col gap-2 mt-1">
+          {rooms.map((r) => {
+            const n = items.filter((i) => i.roomId === r.id).length
+            return (
+              <div key={r.id} className="card flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <span className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${r.done ? 'bg-accent text-white' : 'bg-surface text-ink-3'}`}>{r.done ? <Check size={18} strokeWidth={3} /> : <ScanLine size={18} />}</span>
+                  <span className="flex-1 min-w-0"><b className="block font-semibold truncate">{r.name}</b><span className="text-ink-2 text-[14px]">{r.done ? `Done · ${n} item${n === 1 ? '' : 's'}` : n ? `${n} item${n === 1 ? '' : 's'} so far` : 'Not started'}</span></span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link to={`/rooms/${r.id}/quick`} className="btn btn-sm h-12 text-[15px]">Room scan <span className="text-[10px] font-bold uppercase tracking-wide bg-white text-ink rounded-full px-1.5 py-0.5">Beta</span></Link>
+                  <Link to={`/rooms/${r.id}/scan`} className="btn btn-secondary btn-sm h-12 text-[15px]">One at a time</Link>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        <Link to="/rooms" className="btn btn-ghost">Add a room</Link>
+        <button onClick={tellOwner} disabled={!items.length} className="btn mt-1">Tell {owner} it's ready to sort</button>
+        <p className="text-ink-2 text-[14px] text-center" role="status">{pending ? (online ? `Saving ${pending}…` : 'Saved on this phone. It sends when you are back online.') : `${items.length} item${items.length === 1 ? '' : 's'} saved`}</p>
+      </Page>
+    )
+  }
+
   return (
     <Page>
       <div className="flex items-center justify-between mb-4">
@@ -49,12 +81,12 @@ export default function Home() {
       <h1 className="mb-2">{items.length ? `${items.length} thing${items.length === 1 ? '' : 's'} sorted.${next ? ` ${next.name} next.` : ''}` : headline}</h1>
       {!items.length && <p className="lead mb-4">{body}</p>}
       {next && (
-        <Link to={`/rooms/${next.id}/${store.relation === 'scanner' ? 'quick' : 'scan'}`} className="flex items-center gap-4 p-4 mt-4 mb-6 rounded-3xl bg-ink text-white active:opacity-90">
+        <Link to={`/rooms/${next.id}/${helper ? 'quick' : 'scan'}`} className="flex items-center gap-4 p-4 mt-4 mb-6 rounded-3xl bg-ink text-white active:opacity-90">
           <span className="w-14 h-14 rounded-2xl bg-white text-ink flex items-center justify-center shrink-0"><ScanLine size={28} /></span>
           <span><span className="block text-[21px] font-semibold" style={{ fontFamily: 'var(--font-display)' }}>Scan the {next.name.toLowerCase()}</span><span className="block text-[15px] text-white/75">Point at each item and tap.</span></span>
         </Link>
       )}
-      {next && store.relation !== 'scanner' && (
+      {next && !helper && (
         <Link to={`/rooms/${next.id}/quick`} className="card flex items-center gap-3 py-3 -mt-3 mb-6">
           <span className="flex-1"><b className="block font-semibold">Room scan <span className="text-[12px] font-bold uppercase tracking-wide bg-ink text-white rounded-full px-2 py-0.5 ml-1 align-middle">Beta</span></b><span className="text-ink-2 text-[14px]">Turn slowly and we list the whole {next.name.toLowerCase()}</span></span>
           <ChevronRight size={18} className="text-ink-3" />
@@ -76,8 +108,8 @@ export default function Home() {
       </div>
       <div className="flex flex-col gap-2">
         <Link to="/rooms" className="card flex items-center gap-3 py-3"><span className="flex-1"><b className="block font-semibold">{done} of {rooms.length} rooms done</b><span className="block h-2 rounded-full bg-line overflow-hidden mt-2"><span className="block h-full bg-accent rounded-full" style={{ width: `${pct}%` }} /></span></span><ChevronRight size={18} className="text-ink-3" /></Link>
-        {undecided > 0 && store.relation !== 'scanner' && <Link to="/sort" className="flex items-center gap-3 p-4 rounded-[22px] bg-ink text-white"><Dot tag="undecided" size={34} /><span className="flex-1"><b className="block font-semibold text-[17px]">{undecided} item{undecided === 1 ? '' : 's'} ready to sort</b><span className="text-white/75 text-[14px]">{store.relation === 'owner' || store.relation === 'executor' ? 'Tap a dot for each one' : `Say what you'd like. ${job.clientName.split(' ')[0]} decides.`}</span></span><ChevronRight size={18} /></Link>}
-        {store.relation === 'scanner' && <button onClick={tellOwner} className="flex items-center gap-3 p-4 rounded-[22px] bg-ink text-white text-left"><span className="flex-1"><b className="block font-semibold text-[17px]">Tell {job.clientName.split(' ')[0]} it's ready to sort</b><span className="text-white/75 text-[14px]">{items.length} items scanned in {done} of {rooms.length} rooms</span></span><ChevronRight size={18} /></button>}
+        {undecided > 0 && !helper && <Link to="/sort" className="flex items-center gap-3 p-4 rounded-[22px] bg-ink text-white"><Dot tag="undecided" size={34} /><span className="flex-1"><b className="block font-semibold text-[17px]">{undecided} item{undecided === 1 ? '' : 's'} ready to sort</b><span className="text-white/75 text-[14px]">{store.relation === 'owner' || store.relation === 'executor' ? 'Tap a dot for each one' : `Say what you'd like. ${job.clientName.split(' ')[0]} decides.`}</span></span><ChevronRight size={18} /></Link>}
+        {helper && <button onClick={tellOwner} className="flex items-center gap-3 p-4 rounded-[22px] bg-ink text-white text-left"><span className="flex-1"><b className="block font-semibold text-[17px]">Tell {job.clientName.split(' ')[0]} it's ready to sort</b><span className="text-white/75 text-[14px]">{items.length} items scanned in {done} of {rooms.length} rooms</span></span><ChevronRight size={18} /></button>}
         {!hasDetails && <Link to="/details" className="card flex items-center gap-3 py-3"><span className="flex-1"><b className="block font-semibold">{mode === 'self' ? 'Add your phone and address' : 'Add contact and addresses'}</b><span className="text-ink-2 text-[14px]">So we can plan the day</span></span><ChevronRight size={18} className="text-ink-3" /></Link>}
         {items.length > 0 && <Link to="/book" className="card flex items-center gap-3 py-3"><span className="flex-1"><b className="block font-semibold">See your price</b><span className="text-ink-2 text-[14px]">Crew, truck and what is included</span></span><ChevronRight size={18} className="text-ink-3" /></Link>}
       </div>

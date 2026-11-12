@@ -162,10 +162,11 @@ export default function Scan() {
   }
 
   const save = () => {
-    if (!draft || !draft.name.trim() || !draft.tag) return
+    const helper = store.relation === 'scanner'
+    if (!draft || !draft.name.trim() || (!draft.tag && !helper)) return
     const id = uid()
     try { store.saveItem({
-      id, jobId: job.id, roomId: room.id, name: draft.name.trim(), size: draft.size, tag: draft.tag, photo: draft.photo, qty: draft.qty > 1 ? draft.qty : undefined,
+      id, jobId: job.id, roomId: room.id, name: draft.name.trim(), size: draft.size, tag: draft.tag ?? 'undecided', photo: draft.photo, qty: draft.qty > 1 ? draft.qty : undefined,
       familyRecipient: draft.tag === 'family' ? draft.recipient.trim() || undefined : undefined,
       status: 'tagged', createdAt: now(), updatedAt: now(),
     }, true) } catch {
@@ -242,7 +243,7 @@ export default function Scan() {
           {err && <p role="alert" className="text-danger text-[15px] font-medium mb-2">{err}</p>}
           <div className="grid grid-cols-[auto_1fr] gap-3">
             <button className="btn btn-secondary w-auto px-5" onClick={() => setDraft(null)}>Retake</button>
-            <button className="btn" disabled={!draft.name.trim() || !draft.tag} onClick={save}><Check size={20} /> {!draft.name.trim() ? 'Name it to save' : !draft.tag ? 'Pick where it goes' : 'Save and keep going'}</button>
+            <button className="btn" disabled={!draft.name.trim() || (!draft.tag && store.relation !== 'scanner')} onClick={save}><Check size={20} /> {!draft.name.trim() ? 'Name it to save' : !draft.tag && store.relation !== 'scanner' ? 'Pick where it goes' : 'Save and keep going'}</button>
           </div>
         </div>
       )}>
@@ -268,7 +269,7 @@ export default function Scan() {
             </div>
             {(isSetLike(draft.name) || draft.qty > 1) && <div className="mb-4"><SetPicker name={draft.name} value={draft.qty} onChange={(qty) => setDraft({ ...draft, qty })} /></div>}
 
-            <div className="mb-2 flex items-baseline justify-between">
+            {store.relation !== 'scanner' && <><div className="mb-2 flex items-baseline justify-between">
               <span className="eyebrow">What should happen to it?</span>
               {(() => { const s = ai.suggestTag(draft.name); return s && s.tag !== 'undecided' && draft.tag !== s.tag ? <button className="text-[13px] font-semibold text-accent" onClick={() => setDraft({ ...draft, tag: s.tag })}>Suggest: {s.tag}</button> : null })()}
             </div>
@@ -276,7 +277,7 @@ export default function Scan() {
 
             {draft.tag === 'family' && (
               <input className="input mt-3" placeholder="Who is it for? e.g. Sarah" value={draft.recipient} onChange={(e) => setDraft({ ...draft, recipient: e.target.value })} />
-            )}
+            )}</>}
 
           </div>
         )}
