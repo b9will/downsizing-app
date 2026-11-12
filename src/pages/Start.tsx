@@ -21,7 +21,7 @@ export default function Start() {
   const [hadJob] = useState(() => !!store.getJob())
   if (!user) return null
   // Setup is a one-time step. Anyone who already has a home goes straight to their dashboard.
-  if (isStaff(user)) return <Navigate to="/crew" replace />
+  if (isStaff(user)) return <Navigate to={user.role === 'admin' ? '/office' : '/crew'} replace />
   if (job && hadJob && !params.get('code')) return <Navigate to="/" replace />
 
   const start = (m: JobMode) => {

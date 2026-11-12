@@ -22,6 +22,7 @@ import SharePage from './pages/Share'
 import Start from './pages/Start'
 import Guest from './pages/Guest'
 import CrewHome from './pages/crew/CrewHome'
+import Office from './pages/office/Office'
 import CrewJob from './pages/crew/CrewJob'
 import CrewStop from './pages/crew/CrewStop'
 import StickerEntry from './pages/crew/StickerEntry'
@@ -45,7 +46,7 @@ function ClientOnly() {
   const user = useStore(() => store.getUser())
   const job = useStore(() => store.getJob())
   const loc = useLocation()
-  if (isStaff(user) && !loc.pathname.startsWith('/settings')) return <Navigate to="/crew" replace />
+  if (isStaff(user) && !loc.pathname.startsWith('/settings')) return <Navigate to={user?.role === 'admin' ? '/office' : '/crew'} replace />
   if (!job && !isStaff(user)) return <Navigate to="/start" replace />
   // Scan-only helpers can scan rooms and nothing else.
   if (store.relation === 'scanner' && /^\/(plan|book|share|sort|summary|settings|details|items)/.test(loc.pathname)) return <Navigate to="/" replace />
@@ -70,6 +71,7 @@ export default function App() {
           <Route path="/start" element={<Start />} />
           <Route path="/setup" element={<CameraSetup />} />
           <Route element={<StaffOnly />}>
+            <Route path="/office" element={<Office />} />
             <Route path="/crew" element={<CrewHome />} />
             <Route path="/crew/stickers" element={<StickerPrint />} />
             <Route path="/crew/jobs/:jobId" element={<CrewJob />} />

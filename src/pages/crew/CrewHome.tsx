@@ -39,7 +39,7 @@ export default function CrewHome() {
   return (
     <Page>
       <div className="flex items-center justify-between mb-4">
-        <span className="eyebrow">Crew · {user.name}</span>
+        <span className="eyebrow">Crew · {user.name}{user.role === 'admin' && <> · <Link to="/office" className="underline">Office</Link></>}</span>
         <button aria-label="Refresh" onClick={reload} className="w-11 h-11 -mr-2 flex items-center justify-center text-ink-2"><RefreshCw size={20} className={loading ? 'animate-spin' : ''} /></button>
       </div>
       <h1 className="mb-5">Jobs</h1>
