@@ -54,6 +54,12 @@ export default function Home() {
           <span><span className="block text-[21px] font-semibold" style={{ fontFamily: 'var(--font-display)' }}>Scan the {next.name.toLowerCase()}</span><span className="block text-[15px] text-white/75">Point at each item and tap.</span></span>
         </Link>
       )}
+      {next && store.relation !== 'scanner' && (
+        <Link to={`/rooms/${next.id}/quick`} className="card flex items-center gap-3 py-3 -mt-3 mb-6">
+          <span className="flex-1"><b className="block font-semibold">Room scan <span className="text-[12px] font-bold uppercase tracking-wide bg-ink text-white rounded-full px-2 py-0.5 ml-1 align-middle">Beta</span></b><span className="text-ink-2 text-[14px]">Turn slowly and we list the whole {next.name.toLowerCase()}</span></span>
+          <ChevronRight size={18} className="text-ink-3" />
+        </Link>
+      )}
 
       <Link to="/plan" className="grid grid-cols-4 gap-x-1 gap-y-3 mb-6" aria-label="Open the plan">
         {counts.map((c) => (
