@@ -1,7 +1,7 @@
 // Static site generator for the DOT marketing site. No dependencies: `node build.mjs` writes ./dist.
 import { mkdirSync, writeFileSync, readFileSync, rmSync, cpSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { BRAND, APP, SERVICES, AREAS, QUESTIONS, FAQ, PHOTOS, EXAMPLES } from './content.mjs'
+import { BRAND, APP, SERVICES, AREAS, QUESTIONS, FAQ, PHOTOS, EXAMPLES, ROLES } from './content.mjs'
 import { PRIVACY, TERMS, UPDATED } from './legal.mjs'
 
 const host = process.env.SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:3000')
@@ -86,7 +86,7 @@ ${scan(src, 'Scan a room free', 'sm')}
 <div><a class="logo" href="/"><span class="dot move"></span>${BRAND.short}</a><p class="muted" style="margin-top:10px;max-width:300px">${BRAND.long}. ${BRAND.tagline}</p><p class="muted small" style="margin-top:14px">Serving Toronto and the GTA.</p></div>
 <div><h4>Services</h4><ul>${SERVICES.map((s) => `<li><a href="/services/${s.slug}">${s.name}</a></li>`).join('')}</ul></div>
 <div><h4>Areas</h4><ul>${AREAS.map((a) => `<li><a href="/areas/${a.slug}">${a.name}</a></li>`).join('')}</ul></div>
-<div><h4>Company</h4><ul><li><a href="/how-it-works">How it works</a></li><li><a href="/plan-ahead">Planning ahead</a></li><li><a href="/moving-soon">Moving soon</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/app">The app</a></li><li><a href="/guides">Guides</a></li><li><a href="/faq">Questions</a></li><li><a href="/contact">Contact</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/terms">Terms</a></li></ul></div>
+<div><h4>Company</h4><ul><li><a href="/how-it-works">How it works</a></li><li><a href="/plan-ahead">Planning ahead</a></li><li><a href="/moving-soon">Moving soon</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/app">The app</a></li><li><a href="/guides">Guides</a></li><li><a href="/faq">Questions</a></li><li><a href="/contact">Contact</a></li><li><a href="/careers">Careers</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/terms">Terms</a></li></ul></div>
 </div><p class="muted small" style="margin-top:36px">© ${new Date().getFullYear()} ${BRAND.long}. Prices shown are guides; your scan gives you your own. Photos are stock images from Unsplash, not our clients.</p></div></footer>
 <div class="sticky-cta">${scan(src)}</div>
 <script>(()=>{const s=document.querySelector('.sticky-cta'),end=document.querySelector('.band')||document.querySelector('footer');let near=false;if(end&&'IntersectionObserver'in window)new IntersectionObserver(e=>{near=e[0].isIntersecting;f()}).observe(end);const f=()=>document.body.classList.toggle('show-cta',scrollY>620&&!near);addEventListener('scroll',f,{passive:true});f()})()</script>
@@ -253,6 +253,35 @@ try{const r=await fetch('${SUPA}/rest/v1/leads',{method:'POST',headers:{apikey:'
 if(!r.ok)throw 0;f.hidden=true;document.getElementById('lead-ok').hidden=false}catch{err.textContent='That did not send. Please check your connection and try again.';err.hidden=false;b.disabled=false;b.textContent='Send'}});
 </script>` })
 
+// ---------- Careers (applications go to the same inbox as enquiries, marked as applications)
+page('/careers', { src: 'careers', og: 'value', crumbs: [['Careers', '/careers']], title: `Careers: drivers, movers and office roles | ${BRAND.short}`,
+  desc: 'Work with DOT in Toronto and the GTA. We are building a roster of drivers and movers, and hiring for customer success and partnerships.',
+  body: `<section class="hero"><div class="wrap"><div class="grid"><div>${dots(['move', 'keep', 'family', 'sell'])}<h1>Work with DOT</h1><p class="lead" style="margin-top:18px">We help families through one of the harder moves of their lives. The software handles the paperwork, so the people can spend their time on the people.</p><div class="cta"><a class="btn go" href="#apply">Apply now</a></div><p class="muted small" style="margin-top:14px">We are a new company building our first team. Crew roles start on call and grow with the work.</p></div>${pic('boxes', 'tall', true)}</div></div></section>
+<section class="soft"><div class="wrap"><div class="head"><p class="eyebrow">How we work</p><h2>Careful, kind and organised.</h2></div><div class="grid3">${[['The list runs the day', 'Every item is on a list with a photo and a destination before you arrive. No guessing, no arguments on the driveway.', 'undecided'], ['People first', 'Our customers are often older, and often grieving or stressed. Patience is part of the job, not an extra.', 'family'], ['Automation does the routine', 'Reminders, schedules and paperwork are automatic, so your time goes to the work that needs a person.', 'store']].map(([t, p, d]) => `<div class="card"><span class="dot ${d}"></span><h3>${t}</h3><p>${p}</p></div>`).join('')}</div></div></section>
+<section><div class="wrap"><div class="head"><p class="eyebrow">Roles</p><h2>Who we are looking for.</h2></div><div class="grid2">${ROLES.map((o) => `<article class="card" id="${o.slug}"><span class="dot ${o.dot}"></span><p class="eyebrow">${o.type}</p><h3 style="font-size:26px">${o.name}</h3><p>${esc(o.lead)}</p><h4 class="mini">What you do</h4><ul class="check">${o.does.map((d) => `<li>${esc(d)}</li>`).join('')}</ul><h4 class="mini">What you bring</h4><ul class="check">${o.needs.map((d) => `<li>${esc(d)}</li>`).join('')}</ul><a class="btn alt sm" style="margin-top:8px;align-self:flex-start" href="#apply" data-role="${esc(o.name)}">Apply for this role</a></article>`).join('')}</div></div></section>
+<section class="soft" id="apply"><div class="wrap"><div class="grid" style="align-items:start"><div><div class="head" style="margin-bottom:18px"><p class="eyebrow">Apply</p><h2>Tell us about yourself.</h2></div><p class="lead">No resume needed to start. A person reads every application and replies.</p><p class="muted" style="margin-top:16px">DOT welcomes applicants of every background and will accommodate disabilities during hiring; tell us what you need.</p></div>
+<div class="card" style="background:#fff"><form class="lead-form" id="apply-form" novalidate>
+<div><label for="a-role">Role</label><select id="a-role" name="role">${ROLES.map((o) => `<option>${esc(o.name)}</option>`).join('')}<option>Something else</option></select></div>
+<div><label for="a-name">Your name</label><input id="a-name" name="name" autocomplete="name" required maxlength="80"></div>
+<div><label for="a-phone">Phone</label><input id="a-phone" name="phone" type="tel" autocomplete="tel" maxlength="40"></div>
+<div><label for="a-email">Email</label><input id="a-email" name="email" type="email" autocomplete="email" maxlength="160"></div>
+<div><label for="a-area">Where do you live?</label><input id="a-area" name="area" placeholder="Neighbourhood or city" maxlength="80"></div>
+<div><label for="a-msg">Your experience, and when you are available</label><textarea id="a-msg" name="message" maxlength="2000"></textarea></div>
+<div class="hp" aria-hidden="true"><label for="a-web">Website</label><input id="a-web" name="website" tabindex="-1" autocomplete="off"></div>
+<p class="err" id="apply-err" role="alert" hidden></p>
+<button class="btn go" type="submit">Send application</button><p class="muted small">We use this only to consider you for work with DOT. See our <a href="/privacy">privacy policy</a>.</p></form>
+<div class="ok" id="apply-ok" role="status" hidden>Thank you. A person will read this and get back to you.</div></div></div></div></section>
+<script>
+document.querySelectorAll('[data-role]').forEach(a=>a.addEventListener('click',()=>{document.getElementById('a-role').value=a.dataset.role}));
+const af=document.getElementById('apply-form'),ae=document.getElementById('apply-err');
+af.addEventListener('submit',async(e)=>{e.preventDefault();const d=Object.fromEntries(new FormData(af));ae.hidden=true;
+if(d.website)return;if(!d.name.trim()){ae.textContent='Please add your name.';ae.hidden=false;return}
+if(!d.phone.trim()&&!d.email.trim()){ae.textContent='Please add a phone number or an email so we can reply.';ae.hidden=false;return}
+const b=af.querySelector('button');b.disabled=true;b.textContent='Sending…';
+try{const r=await fetch('${SUPA}/rest/v1/leads',{method:'POST',headers:{apikey:'${SUPA_KEY}',Authorization:'Bearer ${SUPA_KEY}','Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({kind:'application',role:d.role,name:d.name.trim(),phone:d.phone.trim()||null,email:d.email.trim()||null,area:d.area.trim()||null,message:d.message.trim()||null,page:'careers'})});
+if(!r.ok)throw 0;af.hidden=true;document.getElementById('apply-ok').hidden=false}catch{ae.textContent='That did not send. Please check your connection and try again.';ae.hidden=false;b.disabled=false;b.textContent='Send application'}});
+</script>` })
+
 // ---------- Privacy and terms
 const legal = (path, name, intro, sections) => page(path, { src: path.slice(1), title: `${name} | ${BRAND.short}`, desc: intro, crumbs: [[name, path]],
   body: `<section class="hero" style="padding-bottom:16px"><div class="wrap narrow"><p class="crumbs"><a href="/">Home</a> / ${name}</p><h1 style="font-size:clamp(36px,5vw,56px)">${name}</h1><p class="muted" style="margin-top:14px">Last updated ${UPDATED}</p></div></section>
@@ -292,6 +321,7 @@ writeFileSync(join(out, 'llms.txt'), `# ${BRAND.short}: ${BRAND.long}
 - [Moving soon](${host}/moving-soon): for a set date, a sold house or an estate
 - [Questions](${host}/faq)
 - [Contact](${host}/contact)
+- [Careers](${host}/careers): drivers, movers, customer success and partnerships roles
 
 ## Services
 ${SERVICES.map((s) => `- [${s.name}](${host}/services/${s.slug}): ${s.lead}`).join('\n')}

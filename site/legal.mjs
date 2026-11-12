@@ -13,6 +13,7 @@ export const PRIVACY = [
     'Family requests: the first name of each person you invite and what they asked for.',
     'Payments: card payments are taken by Stripe on Stripe\'s own page. We never see or store your card number. We keep a record that a payment was made.',
     'Website enquiries: what you enter on the contact form.',
+    'Job applications: what you send us on the careers page. We use it only to consider you for work, and delete it on request.',
     'Assistant questions: the questions typed to the website assistant and its replies, with the page they were asked on. We do not attach your name, email or address to them. To limit misuse we keep a daily count against a scrambled, one-way version of your internet address.',
     'Website statistics: page visits counted without cookies and without identifying you.']],
   ['How we use it', [

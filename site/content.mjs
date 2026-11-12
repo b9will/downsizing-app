@@ -180,3 +180,23 @@ export const EXAMPLES = [
   { dot: 'sell', who: 'A downsizer with good furniture and no room for it', where: 'Condo move in North York', need: 'The dining suite and the art are worth something.',
     does: ['Dealers get a link showing only the pieces for sale', 'They accept or pass from photos and sizes', 'What sells is credited against the move'], result: 'Good pieces find buyers instead of a bin.' },
 ]
+
+// Roles on the careers page. Describe the work plainly; do not promise pay, hours or status that are not settled.
+export const ROLES = [
+  { slug: 'driver', dot: 'move', name: 'Driver', type: 'On call to start',
+    lead: 'You drive the truck and you run the job. The list is yours: every item, where it goes, and the photo that proves it got there.',
+    does: ['Drive a rented box truck safely around Toronto and the GTA', 'Lead the crew on site and keep the day on plan', 'Work the job from the DOT list on a tablet, checking off each stop', 'Be the calm, friendly face the family deals with on the day'],
+    needs: ['A full Ontario G licence and a clean driving record', 'Experience driving a cube van or box truck', 'Comfortable with a phone or tablet', 'Able to lift and carry furniture safely'] },
+  { slug: 'mover', dot: 'keep', name: 'Mover', type: 'On call to start',
+    lead: 'You handle people\'s belongings as if they were your own grandparents\'. Careful hands matter more here than speed.',
+    does: ['Pack, wrap, carry and place furniture and boxes', 'Follow the dot on each item: move, donate, sell, store or dispose', 'Load and unload at homes, charities and consignment houses', 'Leave every home tidy'],
+    needs: ['Able to lift and carry safely for a full day', 'Patient and respectful with older clients', 'Reliable and on time', 'Moving experience is welcome but not required'] },
+  { slug: 'customer-success', dot: 'family', name: 'Customer success and office lead', type: 'Part time to start',
+    lead: 'Most of the routine is automated. You are the person families actually talk to: the welcome call, the hard questions, the check-in after the move.',
+    does: ['Call new customers and walk them through their plan', 'Answer the questions the website assistant cannot', 'Review each quote and plan before it goes out', 'Keep the calendar, the crew roster and the partners in step'],
+    needs: ['Warm and clear on the phone', 'Organised, and comfortable with software', 'Experience with seniors, families or customer service', 'Good judgement about when to pick up the phone'] },
+  { slug: 'partnerships', dot: 'sell', name: 'Partnerships and sales', type: 'Part time or commission to start',
+    lead: 'Our best customers are referred by people they already trust. You build those relationships.',
+    does: ['Meet realtors, retirement residences, estate lawyers and financial planners', 'Show them the app in five minutes on your phone', 'Set up referral arrangements and keep partners informed', 'Bring back what you hear so the service improves'],
+    needs: ['Comfortable walking in and starting a conversation', 'Experience in real estate, seniors\' services or local sales helps', 'Honest: we would rather lose a job than oversell one', 'Your own way of getting around the GTA'] },
+]
