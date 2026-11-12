@@ -1,106 +1,104 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Check, ChevronRight, FileSpreadsheet } from 'lucide-react'
+import { Check, ChevronRight, Truck } from 'lucide-react'
 import { Dot, Page } from '../components/ui'
 import { ai } from '../lib/ai'
 import { useStore } from '../lib/hooks'
 import { store } from '../lib/store'
-import { TAGS, type Job, type Tag } from '../lib/types'
-import { ExportSheet } from '../components/ExportSheet'
+import { TAG_ORDER, type Job } from '../lib/types'
 import { detailsComplete } from './Details'
 
 const money = (n: number) => n.toLocaleString('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 })
 const TIERS: Array<[Job['tier'], string, string]> = [
-  ['clear', 'Clear', 'We empty the home. Everything tagged is stored, donated, sold or disposed of.'],
-  ['clear-move', 'Clear and move', 'Everything in Clear, plus we pack and move your Move items to the new home.'],
-  ['clear-move-settle', 'Clear, move and settle', 'Everything above, plus we unpack, place furniture and take away every box.'],
+  ['clear', 'Clear', 'We empty the home'],
+  ['clear-move', 'Clear + move', 'Plus pack and move'],
+  ['clear-move-settle', '+ Settle in', 'Plus unpack and place'],
 ]
+const niceDate = (d?: string | null) => { if (!d) return ''; const t = new Date(`${d.slice(0, 10)}T12:00:00`); return isNaN(+t) ? '' : t.toLocaleDateString('en-CA', { weekday: 'long', month: 'short', day: 'numeric' }) }
 
-// Step 1: choose the service. Step 2: see the estimate for that choice. Then send.
-export default function Summary() {
+// The booking page. Their home, the price, what is included, and one button.
+export default function Book() {
   const job = useStore(() => store.getJob())
   const rooms = useStore(() => (job ? store.listRooms(job.id) : []))
   const items = useStore(() => (job ? store.listItems(job.id) : []))
-  const [revealed, setRevealed] = useState(() => job?.status !== 'tagging')
-  const [exporting, setExporting] = useState(false)
   if (!job) return null
 
   const user = store.getUser()
   const isOwner = job.ownerId === user?.id
+  const first = job.clientName.split(' ')[0]
   const ready = detailsComplete(job.details)
-  const sent = job.status !== 'tagging'
+  const booked = job.status !== 'tagging'
   const q = ai.estimateQuote(job, items)
-  const undecided = items.filter((i) => i.tag === 'undecided')
-  const unfinished = rooms.filter((r) => !r.done)
-  const counts = (Object.keys(TAGS) as Tag[]).map((t) => ({ t, n: items.filter((i) => i.tag === t).length })).filter((c) => c.n > 0)
+  const pieces = items.reduce((n, i) => n + (i.qty ?? 1), 0)
+  const undecided = items.filter((i) => i.tag === 'undecided').length
+  const when = niceDate(job.details?.moveDate || job.moveDate)
+  const photos = items.filter((i) => i.photo).slice(0, 4)
+  const more = items.length - photos.length
+  const tags = TAG_ORDER.map((t) => ({ t, n: items.filter((i) => i.tag === t).reduce((n, i) => n + (i.qty ?? 1), 0) })).filter((c) => c.n)
+  const included = [
+    `${q.crew} movers for about ${q.hours} hours`,
+    `${q.truck}${job.tier === 'clear' ? '' : `, ${q.boxes} boxes and all packing`}`,
+    ...(q.donationLoads ? ['Donation drop-off, with receipts'] : []),
+    ...(q.junkLoads ? ['Disposal and recycling'] : []),
+    ...(items.some((i) => i.tag === 'sell') ? ['Consignment pickup, proceeds to you'] : []),
+    ...(q.storageUnit ? [`Storage: ${q.storageUnit}`] : []),
+    ...(job.tier === 'clear-move-settle' ? ['Unpacking, furniture placed, boxes taken away'] : []),
+  ]
+
+  if (items.length === 0) {
+    return (
+      <Page className="min-h-full flex flex-col gap-4 pt-10">
+        <span className="w-16 h-16 rounded-full bg-ink text-white flex items-center justify-center"><Truck size={30} /></span>
+        <h1>Scan a room first</h1>
+        <p className="lead">Once we can see what's in the home, your price and crew show up here.</p>
+        <Link to="/rooms" className="btn mt-2">Go to rooms</Link>
+      </Page>
+    )
+  }
 
   return (
-    <Page>
-      <h1 className="mb-1">{revealed ? 'Your estimate' : 'How much should we do?'}</h1>
-      <p className="lead mb-6">{revealed ? 'Based on what you tagged and the service you chose.' : 'Pick first. Then we show the price.'}</p>
+    <Page className="flex flex-col gap-4 pb-56">
+      {photos.length > 0 && (
+        <div className={`grid gap-1 h-44 rounded-3xl overflow-hidden ${photos.length > 1 ? 'grid-cols-[2fr_1fr_1fr] grid-rows-2' : ''}`}>
+          {photos.map((i, n) => <img key={i.id} src={i.photo} alt="" className={`w-full h-full object-cover bg-surface-2 ${n === 0 && photos.length > 1 ? 'row-span-2' : ''}`} />)}
+          {photos.length > 1 && more > 0 && <div className="bg-ink text-white flex items-center justify-center font-semibold">+{more}</div>}
+        </div>
+      )}
+      <div>
+        <h1 className="text-[32px]">{booked ? 'Your move is with our team.' : 'Your move, handled.'}</h1>
+        <p className="text-ink-2 text-[16px] mt-1">{[`${pieces} piece${pieces === 1 ? '' : 's'}`, `${rooms.length} rooms`, when].filter(Boolean).join(' · ')}</p>
+      </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-2">{tags.map((c) => <span key={c.t} className="inline-flex items-center gap-1.5 text-[15px] font-semibold"><Dot tag={c.t} size={26} /> {c.n}</span>)}</div>
 
-      <div className="eyebrow mb-2 px-1">1. Service</div>
-      <div className="flex flex-col gap-2 mb-6" role="radiogroup">
-        {TIERS.map(([v, label, desc]) => {
+      <div className="grid grid-cols-3 gap-1.5" role="radiogroup" aria-label="Service">
+        {TIERS.map(([v, label, sub]) => {
           const on = job.tier === v
-          return (
-            <button key={v} type="button" role="radio" aria-checked={on} onClick={() => store.saveJob({ ...job, tier: v })} className={`flex gap-3 p-4 rounded-[22px] text-left items-start ${on ? 'bg-surface shadow-[0_0_0_3px_#111]' : 'bg-soft'}`}>
-              <span className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${on ? 'border-ink bg-ink' : 'border-line'}`}>{on && <Check size={12} className="text-white" strokeWidth={3} />}</span>
-              <span className="min-w-0"><span className="block font-semibold">{label}</span><span className="block text-ink-2 text-[14px]">{desc}</span></span>
-            </button>
-          )
+          return <button key={v} type="button" role="radio" aria-checked={on} disabled={booked || !isOwner} onClick={() => store.saveJob({ ...job, tier: v })} className={`min-h-16 px-2 py-2.5 rounded-[18px] text-center leading-tight ${on ? 'bg-ink text-white' : 'bg-surface-2 text-ink'} ${booked && !on ? 'opacity-40' : ''}`}><span className="block font-semibold text-[14px]">{label}</span><span className={`block text-[12px] mt-0.5 ${on ? 'text-white/70' : 'text-ink-2'}`}>{sub}</span></button>
         })}
       </div>
 
-      <div className="eyebrow mb-2 px-1">2. What you tagged</div>
-      <div className="card mb-6">
-        <div className="flex flex-wrap gap-x-4 gap-y-2">
-          {counts.length ? counts.map((c) => <span key={c.t} className="inline-flex items-center gap-1.5 text-[15px] font-semibold"><Dot tag={c.t} size={26} /> {c.n}</span>) : <span className="text-ink-3 text-[14px]">Nothing tagged yet.</span>}
-        </div>
-        {(unfinished.length > 0 || undecided.length > 0) && (
-          <div className="mt-3 pt-3 border-t border-line text-[14px] text-ink-2 flex flex-col gap-1">
-            {unfinished.length > 0 && <div>{unfinished.length} room{unfinished.length === 1 ? '' : 's'} not marked done.</div>}
-            {undecided.length > 0 && <Link to="/plan" className="flex items-center justify-between text-ink font-medium"><span>{undecided.length} item{undecided.length === 1 ? '' : 's'} still "Not sure"</span><ChevronRight size={16} className="text-ink-3" /></Link>}
-          </div>
-        )}
+      <div>
+        <div className="text-[36px] font-semibold tracking-tight tabular-nums leading-none" style={{ fontFamily: 'var(--font-display)' }}>{money(q.priceLow)} <span className="text-ink-3 text-[20px] font-medium">to</span> {money(q.priceHigh)}</div>
+        <p className="text-ink-2 text-[15px] mt-1.5">All-in estimate, before tax. Anything sold is credited back to you.</p>
       </div>
 
-      <div className="eyebrow mb-2 px-1">3. Estimate</div>
-      {!revealed ? (
-        <div className="card mb-6">
-          <p className="text-ink-2 text-[14px] mb-3">Based on {items.length} tagged item{items.length === 1 ? '' : 's'} and the service you chose. Not binding; we confirm before anything is booked.</p>
-          <button className="btn" disabled={items.length === 0} onClick={() => setRevealed(true)}>Show my estimate</button>
-        </div>
-      ) : (
-        <div className="mb-6">
-          <div className="rounded-3xl bg-ink text-white p-5 mb-3">
-            <div className="text-[14px] text-white/70 mb-1">{TIERS.find(([v]) => v === job.tier)?.[1]}</div>
-            <div className="text-[34px] font-semibold tracking-tight tabular-nums leading-none mb-2" style={{ fontFamily: 'var(--font-display)' }}>{money(q.priceLow)} <span className="text-white/60 text-[20px] font-medium">to</span> {money(q.priceHigh)}</div>
-            <div className="text-[14px] text-white/70">All-in, before tax. Anything sold is credited back to you.</div>
-          </div>
-          <dl className="divide-y divide-line text-[15px]">
-            {[['Crew', `${q.crew} movers`], ['Time on site', `${q.hours} hours`], ['Truck', q.truck], ['Boxes and supplies', `${q.boxes} boxes`],
-              ...(q.storageUnit ? [['Storage', q.storageUnit]] : []),
-              ...(q.donationLoads ? [['Donation pickups', String(q.donationLoads)]] : []),
-              ...(q.junkLoads ? [['Disposal loads', String(q.junkLoads)]] : [])].map(([k, v]) => (
-              <div key={k} className="flex justify-between py-2.5"><dt className="text-ink-2">{k}</dt><dd className="font-medium tabular-nums">{v}</dd></div>
-            ))}
-          </dl>
-          {q.notes.length > 0 && <ul className="mt-3 pt-3 border-t border-line text-[13px] text-ink-2 list-disc pl-4 space-y-1">{q.notes.map((n) => <li key={n}>{n}</li>)}</ul>}
-        </div>
-      )}
+      <ul className="flex flex-col gap-2.5">
+        {included.map((t) => <li key={t} className="flex items-center gap-2.5 text-[16px]"><span className="w-6 h-6 rounded-full bg-ink text-white flex items-center justify-center shrink-0"><Check size={14} strokeWidth={3} /></span>{t}</li>)}
+      </ul>
 
-      {revealed && (
-        <>
-          {!ready && (
-            <Link to="/details" className="group mb-3 block"><div className="row py-3"><div className="flex-1"><div className="font-semibold">Add your details to send</div><div className="text-ink-2 text-[14px]">Phone and address, so we can plan the day.</div></div><ChevronRight className="text-ink-3" size={18} /></div></Link>
-          )}
-          <button className="btn" disabled={items.length === 0 || sent || !ready || !isOwner} onClick={() => store.saveJob({ ...job, status: 'review' })}>{sent ? 'Sent. We are reviewing it.' : isOwner ? 'Send to our team' : `${job.clientName.split(' ')[0]} sends this to our team`}</button>
-          <button className="btn btn-ghost mt-1" disabled={items.length === 0} onClick={() => setExporting(true)}><FileSpreadsheet size={18} /> Export lists</button>
-          <p className="text-ink-3 text-[13px] text-center mt-2">You can keep tagging after sending. We see the updates.</p>
-        </>
-      )}
-      <ExportSheet open={exporting} onOpenChange={setExporting} job={job} rooms={rooms} items={items} />
+      {undecided > 0 && <Link to="/sort" className="card flex items-center gap-3 py-3"><Dot tag="undecided" size={30} /><span className="flex-1"><b className="block font-semibold">{undecided} item{undecided === 1 ? '' : 's'} still to sort</b><span className="text-ink-2 text-[14px]">The price firms up as you decide</span></span><ChevronRight size={18} className="text-ink-3" /></Link>}
+      <Link to="/plan" className="card flex items-center gap-3 py-3"><span className="flex-1 font-semibold">See the full plan, room by room</span><ChevronRight size={18} className="text-ink-3" /></Link>
+      {q.notes.length > 0 && <ul className="text-[14px] text-ink-2 list-disc pl-5 space-y-1">{q.notes.map((n) => <li key={n}>{n}</li>)}</ul>}
+
+      {/* Sticky action bar, above the tab bar */}
+      <div className="fixed inset-x-0 bottom-[calc(var(--spacing-safe-b)+64px)] z-20 bg-surface/95 backdrop-blur border-t border-line">
+        <div className="max-w-xl mx-auto px-5 pt-3 pb-9">
+          {booked ? <p className="text-center font-semibold" role="status">Booked. We'll confirm the date and final price with you.</p>
+            : !isOwner ? <p className="text-center text-ink-2">{first} books the move.</p>
+            : !ready ? <Link to="/details" className="btn">Add your phone and address to book</Link>
+            : <button className="btn" onClick={() => store.saveJob({ ...job, status: 'review' })}><Truck size={20} /> {when ? `Book ${when.split(', ').slice(1).join(', ') || when}` : 'Book my move'}</button>}
+          {!booked && isOwner && ready && <p className="text-ink-2 text-[13px] text-center mt-1.5">No payment today. We confirm the date and price first.</p>}
+        </div>
+      </div>
     </Page>
   )
 }

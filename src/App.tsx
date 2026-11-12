@@ -16,7 +16,8 @@ import Scan from './pages/Scan'
 import QuickScan from './pages/QuickScan'
 import Sort from './pages/Sort'
 import Settings from './pages/Settings'
-import Summary from './pages/Summary'
+import Book from './pages/Summary'
+import SharePage from './pages/Share'
 import Start from './pages/Start'
 import Guest from './pages/Guest'
 import CrewHome from './pages/crew/CrewHome'
@@ -84,7 +85,9 @@ export default function App() {
                 <Route path="/items/:itemId" element={<ItemForm />} />
                 <Route path="/plan" element={<Plan />} />
                 <Route path="/sort" element={<Sort />} />
-                <Route path="/summary" element={<Summary />} />
+                <Route path="/book" element={<Book />} />
+                <Route path="/summary" element={<Navigate to="/book" replace />} />
+                <Route path="/share" element={<SharePage />} />
                 <Route path="/details" element={<Details />} />
                 <Route path="/settings" element={<Settings />} />
               </Route>

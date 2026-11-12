@@ -16,7 +16,7 @@ export default function Room() {
     store.saveRoom({ ...room, done: !room.done })
     if (!room.done) {
       const next = store.listRooms(job.id).find((r) => !r.done && r.id !== room.id)
-      nav(next ? `/rooms/${next.id}/scan` : '/summary')
+      nav(next ? `/rooms/${next.id}/scan` : '/book')
     }
   }
 
