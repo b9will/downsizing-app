@@ -9,6 +9,18 @@ const out = join(import.meta.dirname, 'dist')
 rmSync(out, { recursive: true, force: true })
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 const pages = []
+// The same pictograms the app uses, so a colour always comes with a picture of what it means.
+const ICON = {
+  move: 'M2 6h12v10H2z M14 9h4l4 4v3h-8 M4 18a2 2 0 1 0 4 0a2 2 0 1 0-4 0 M16 18a2 2 0 1 0 4 0a2 2 0 1 0-4 0',
+  keep: 'M3 11l9-7 9 7v9H3z M9 20v-6h6v6',
+  family: 'M6 8a3 3 0 1 0 6 0a3 3 0 1 0-6 0 M14.5 9a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0-5 0 M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6 M15.5 14.5c2.6.2 4.5 2.3 4.5 5',
+  sell: 'M3 12V4h8l9 9-8 8z M6 8.5a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0-3 0',
+  donate: 'M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z',
+  junk: 'M4 7h16 M9 7V4h6v3 M6 7l1 13h10l1-13 M10 11v6 M14 11v6',
+  store: 'M3 8l9-5 9 5v8l-9 5-9-5z M3 8l9 5 9-5 M12 13v8',
+  undecided: 'M9 9a3 3 0 1 1 4.2 2.8c-.7.3-1.2 1-1.2 1.8V15 M12 18.5v.5',
+}
+const withIcons = (html) => html.replace(/<span class="dot (\w+)"><\/span>/g, (m, t) => ICON[t] ? `<span class="dot ${t}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICON[t]}"/></svg></span>` : m)
 // Every button to the app carries the page it came from, so we can see which pages bring people in.
 const scan = (src, label = 'Scan a room free', cls = '') => `<a class="btn ${cls}" href="${APP}/login?src=${encodeURIComponent(src)}">${label}</a>`
 const dots = (list = ['move', 'donate', 'sell', 'family']) => `<div class="dots" aria-hidden="true">${list.map((d) => `<span class="dot ${d}"></span>`).join('')}</div>`
@@ -60,9 +72,10 @@ ${scan(src, 'Scan a room free', 'sm')}
 <div><h4>Company</h4><ul><li><a href="/how-it-works">How it works</a></li><li><a href="/plan-ahead">Planning ahead</a></li><li><a href="/moving-soon">Moving soon</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/app">The app</a></li><li><a href="/guides">Guides</a></li><li><a href="/faq">Questions</a></li><li><a href="/contact">Contact</a></li></ul></div>
 </div><p class="muted small" style="margin-top:36px">© ${new Date().getFullYear()} ${BRAND.long}. Prices shown are guides; your scan gives you your own. Photos are stock images from Unsplash, not our clients.</p></div></footer>
 <div class="sticky-cta">${scan(src)}</div>
+<script src="/chat.js" defer></script>
 </body></html>`
   const file = join(out, path === '/' ? 'index.html' : `${path.slice(1)}.html`)
-  mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, html); pages.push(path)
+  mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, withIcons(html)); pages.push(path)
 }
 
 // ---------- Home
@@ -88,7 +101,7 @@ page('/', { src: 'home', title: `Downsizing help in Toronto | ${BRAND.short}, ${
 <div class="grid4">${[['move', 'Move', 'Coming to the new home'], ['family', 'Family', 'Going to someone you name'], ['sell', 'Sell', 'Consignment or auction'], ['donate', 'Donate', 'To a charity that wants it'], ['store', 'Store', 'Into a storage unit'], ['junk', 'Dispose', 'Recycled or taken away'], ['keep', 'Keep', 'Staying in the home'], ['undecided', 'Not sure', 'Decide later']].map(([d, t, p]) => `<div class="card"><span class="dot ${d}"></span><h3>${t}</h3><p>${p}</p></div>`).join('')}</div></div></section>
 <section class="soft"><div class="wrap"><div class="head"><p class="eyebrow">Services</p><h2>Whatever is behind the move.</h2></div>${serviceCards('home')}</div></section>
 <section><div class="wrap"><div class="grid2" style="align-items:center;gap:44px"><div class="head" style="margin:0"><p class="eyebrow">Yours to keep</p><h2>Useful even if you never book us.</h2><p class="lead">The inventory and the price are yours. Keep them on file, share them with family, take them to another mover. If you do book with us, what you paid for the app comes off the job.</p><div class="cta" style="margin-top:8px">${scan('home-value')}<a class="btn alt" href="/pricing">See pricing</a></div></div>
-<ul class="check">${['A photo inventory of every room, as a PDF', 'A price range built from your own list', 'Lists to send to family, charities and dealers', 'A helper can do the scanning for you', 'Questions answered by a person, not a bot'].map((t) => `<li>${t}</li>`).join('')}</ul></div></div></section>
+<ul class="check">${['A photo inventory of every room, as a PDF', 'A price range built from your own list', 'Lists to send to family, charities and dealers', 'A helper can do the scanning for you', 'An assistant for quick answers, a person for everything else'].map((t) => `<li>${t}</li>`).join('')}</ul></div></div></section>
 <section class="soft"><div class="wrap"><div class="head"><p class="eyebrow">Where we work</p><h2>Toronto and the GTA.</h2></div>${areaChips}</div></section>
 <section><div class="wrap narrow"><div class="head"><p class="eyebrow">Questions</p><h2>Good things to ask.</h2></div>${faqBlock(FAQ.slice(0, 5))}<p style="margin-top:20px"><a href="/faq">All questions</a></p></div></section>
 ${band('home-band')}` })
@@ -213,6 +226,7 @@ if(!r.ok)throw 0;f.hidden=true;document.getElementById('lead-ok').hidden=false}c
 // ---------- 404, robots, sitemap, styles
 page('/404', { src: '404', title: `Page not found | ${BRAND.short}`, desc: 'That page is not here.', body: `<section class="hero"><div class="wrap narrow">${dots()}<h1>That page is not here.</h1><p class="lead" style="margin-top:18px">Try the <a href="/">home page</a>, or ${`<a href="${APP}/login?src=404">scan a room free</a>`}.</p></div></section>` })
 writeFileSync(join(out, 'styles.css'), readFileSync(join(import.meta.dirname, 'styles.css')))
+writeFileSync(join(out, 'chat.js'), readFileSync(join(import.meta.dirname, 'chat.js')))
 writeFileSync(join(out, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${host}/sitemap.xml\n`)
 const today = new Date().toISOString().slice(0, 10)
 writeFileSync(join(out, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages.filter((p) => p !== '/404').map((p) => `<url><loc>${host}${p === '/' ? '/' : p}</loc><lastmod>${today}</lastmod></url>`).join('\n')}\n</urlset>\n`)

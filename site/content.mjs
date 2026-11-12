@@ -142,7 +142,7 @@ export const FAQ = [
   ['Can someone else do the scanning?', 'Yes. Send a helper an invite. They only need their first name and the code, and all they can do is scan. You decide where everything goes.'],
   ['Who can see my photos?', 'You, the people you invite, and our team. Charities and dealers only see the items you send them. We never sell or share them, and we delete them whenever you ask.'],
   ['What areas do you cover?', 'Toronto and the surrounding GTA, including Etobicoke, Mississauga, Oakville, Burlington, North York, Scarborough, Vaughan, Markham and Brampton.'],
-  ['Can I talk to a person?', 'Yes. Leave your number on the contact form and a person will call you back. Questions are always answered by people.'],
+  ['Can I talk to a person?', 'Yes. Leave your number on the contact form and a person will call you back. The assistant on this site handles quick questions; anything it cannot answer goes to a person.'],
 ]
 
 // Stock photos (Unsplash, free licence). Swap for real job photos as we get them: change the id, keep the key.
