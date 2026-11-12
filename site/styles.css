@@ -125,3 +125,5 @@ details.menu{border:0;padding:0}
   .btn{transition:background-color .15s ease,transform .1s ease}.btn:active{transform:scale(.98)}
   .photo img{transition:opacity .4s ease}
 }
+
+.legal ul{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px}.legal h2{font-size:24px;margin-top:22px}.legal p,.legal li{color:#333}

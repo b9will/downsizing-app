@@ -2,6 +2,7 @@
 import { mkdirSync, writeFileSync, readFileSync, rmSync, cpSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { BRAND, APP, SERVICES, AREAS, QUESTIONS, FAQ, PHOTOS, EXAMPLES } from './content.mjs'
+import { PRIVACY, TERMS, UPDATED } from './legal.mjs'
 
 const host = process.env.SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:3000')
 const SUPA = 'https://mcsnkmfyqvzpdfeffvzi.supabase.co', SUPA_KEY = 'sb_publishable_O3PwqAH5DKN86WcHIuTnNw_4apN1vU9'
@@ -85,7 +86,7 @@ ${scan(src, 'Scan a room free', 'sm')}
 <div><a class="logo" href="/"><span class="dot move"></span>${BRAND.short}</a><p class="muted" style="margin-top:10px;max-width:300px">${BRAND.long}. ${BRAND.tagline}</p><p class="muted small" style="margin-top:14px">Serving Toronto and the GTA.</p></div>
 <div><h4>Services</h4><ul>${SERVICES.map((s) => `<li><a href="/services/${s.slug}">${s.name}</a></li>`).join('')}</ul></div>
 <div><h4>Areas</h4><ul>${AREAS.map((a) => `<li><a href="/areas/${a.slug}">${a.name}</a></li>`).join('')}</ul></div>
-<div><h4>Company</h4><ul><li><a href="/how-it-works">How it works</a></li><li><a href="/plan-ahead">Planning ahead</a></li><li><a href="/moving-soon">Moving soon</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/app">The app</a></li><li><a href="/guides">Guides</a></li><li><a href="/faq">Questions</a></li><li><a href="/contact">Contact</a></li></ul></div>
+<div><h4>Company</h4><ul><li><a href="/how-it-works">How it works</a></li><li><a href="/plan-ahead">Planning ahead</a></li><li><a href="/moving-soon">Moving soon</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/app">The app</a></li><li><a href="/guides">Guides</a></li><li><a href="/faq">Questions</a></li><li><a href="/contact">Contact</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/terms">Terms</a></li></ul></div>
 </div><p class="muted small" style="margin-top:36px">© ${new Date().getFullYear()} ${BRAND.long}. Prices shown are guides; your scan gives you your own. Photos are stock images from Unsplash, not our clients.</p></div></footer>
 <div class="sticky-cta">${scan(src)}</div>
 <script>(()=>{const s=document.querySelector('.sticky-cta'),end=document.querySelector('.band')||document.querySelector('footer');let near=false;if(end&&'IntersectionObserver'in window)new IntersectionObserver(e=>{near=e[0].isIntersecting;f()}).observe(end);const f=()=>document.body.classList.toggle('show-cta',scrollY>620&&!near);addEventListener('scroll',f,{passive:true});f()})()</script>
@@ -240,7 +241,7 @@ page('/contact', { src: 'contact', og: 'default', crumbs: [['Contact', '/contact
 <div><label for="f-msg">What can we help with?</label><textarea id="f-msg" name="message" maxlength="2000"></textarea></div>
 <div class="hp" aria-hidden="true"><label for="f-web">Website</label><input id="f-web" name="website" tabindex="-1" autocomplete="off"></div>
 <p class="err" id="lead-err" role="alert" hidden></p>
-<button class="btn" type="submit">Send</button><p class="muted small">We only use this to reply to you.</p></form>
+<button class="btn" type="submit">Send</button><p class="muted small">We only use this to reply to you. See our <a href="/privacy">privacy policy</a>.</p></form>
 <div class="ok" id="lead-ok" role="status" hidden>Thank you. A person will be in touch, usually within one business day.</div></div></div></div></section>
 <script>
 const f=document.getElementById('lead'),err=document.getElementById('lead-err');
@@ -251,6 +252,14 @@ const b=f.querySelector('button');b.disabled=true;b.textContent='Sending…';
 try{const r=await fetch('${SUPA}/rest/v1/leads',{method:'POST',headers:{apikey:'${SUPA_KEY}',Authorization:'Bearer ${SUPA_KEY}','Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({name:d.name.trim(),phone:d.phone.trim()||null,email:d.email.trim()||null,area:d.area.trim()||null,message:d.message.trim()||null,page:(new URLSearchParams(location.search).get('from')||document.referrer||'contact').slice(0,120)})});
 if(!r.ok)throw 0;f.hidden=true;document.getElementById('lead-ok').hidden=false}catch{err.textContent='That did not send. Please check your connection and try again.';err.hidden=false;b.disabled=false;b.textContent='Send'}});
 </script>` })
+
+// ---------- Privacy and terms
+const legal = (path, name, intro, sections) => page(path, { src: path.slice(1), title: `${name} | ${BRAND.short}`, desc: intro, crumbs: [[name, path]],
+  body: `<section class="hero" style="padding-bottom:16px"><div class="wrap narrow"><p class="crumbs"><a href="/">Home</a> / ${name}</p><h1 style="font-size:clamp(36px,5vw,56px)">${name}</h1><p class="muted" style="margin-top:14px">Last updated ${UPDATED}</p></div></section>
+<section class="tight" style="padding-top:8px"><div class="wrap narrow"><div class="prose legal">${sections.map(([h, items]) => `<h2>${esc(h)}</h2>${items.length === 1 ? `<p>${esc(items[0])}</p>` : `<ul>${items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>`}`).join('')}
+<p class="muted" style="margin-top:24px">Questions about this page? <a href="/contact">Talk to a person</a>.</p></div></div></section>` })
+legal('/privacy', 'Privacy policy', 'What DOT collects when you scan a home or book a move, who can see it, where it is kept, and how to have it corrected or deleted.', PRIVACY)
+legal('/terms', 'Terms of use', 'The terms for using the DOT app and website: the free room, the Home pass, booking a move, deposits and cancellations.', TERMS)
 
 // ---------- 404, robots, sitemap, styles
 page('/404', { src: '404', noindex: true, title: `Page not found | ${BRAND.short}`, desc: 'That page is not here.', body: `<section class="hero"><div class="wrap narrow">${dots()}<h1>That page is not here.</h1><p class="lead" style="margin-top:18px">Try the <a href="/">home page</a>, or ${`<a href="${APP}/login?src=404">scan a room free</a>`}.</p></div></section>` })

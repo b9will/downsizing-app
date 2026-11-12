@@ -37,7 +37,7 @@ export function Paywall({ job, reason, back = '/', onOpen }: { job: Job; reason?
       {msg && <p role="alert" className="text-danger font-semibold">{msg}</p>}
       <div className="mt-auto flex flex-col gap-2">
         {owner ? <button className="btn" disabled={busy} onClick={go}>{busy ? 'Opening secure payment…' : 'Get the Home pass'}</button> : <p className="text-center font-semibold">Ask {first} to unlock the whole home.</p>}
-        <p className="text-ink-2 text-[13px] text-center">Payment is handled by Stripe. We never see your card.</p>
+        <p className="text-ink-2 text-[13px] text-center">Payment is handled by Stripe. We never see your card. <a className="underline" href="https://dot-toronto.vercel.app/terms" target="_blank" rel="noreferrer">Terms</a></p>
       </div>
     </div>
   )

@@ -90,6 +90,7 @@ export default function Login() {
           <p className="text-ink-2 text-[15px] text-center">Can't find it? Check junk mail. It can take a minute.</p>
         </form>
       )}
+      <p className="text-ink-3 text-[13px] text-center mt-6">By continuing you agree to our <a className="underline" href="https://dot-toronto.vercel.app/terms" target="_blank" rel="noreferrer">terms</a> and <a className="underline" href="https://dot-toronto.vercel.app/privacy" target="_blank" rel="noreferrer">privacy policy</a>.</p>
     </Page>
   )
 }
