@@ -1,7 +1,7 @@
 // Static site generator for the DOT marketing site. No dependencies: `node build.mjs` writes ./dist.
 import { mkdirSync, writeFileSync, readFileSync, rmSync, cpSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { BRAND, APP, SERVICES, AREAS, QUESTIONS, FAQ, PHOTOS } from './content.mjs'
+import { BRAND, APP, SERVICES, AREAS, QUESTIONS, FAQ, PHOTOS, EXAMPLES } from './content.mjs'
 
 const host = process.env.SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:3000')
 const SUPA = 'https://mcsnkmfyqvzpdfeffvzi.supabase.co', SUPA_KEY = 'sb_publishable_O3PwqAH5DKN86WcHIuTnNw_4apN1vU9'
@@ -89,6 +89,8 @@ ${scan(src, 'Scan a room free', 'sm')}
 </div><p class="muted small" style="margin-top:36px">© ${new Date().getFullYear()} ${BRAND.long}. Prices shown are guides; your scan gives you your own. Photos are stock images from Unsplash, not our clients.</p></div></footer>
 <div class="sticky-cta">${scan(src)}</div>
 <script>(()=>{const s=document.querySelector('.sticky-cta'),end=document.querySelector('.band')||document.querySelector('footer');let near=false;if(end&&'IntersectionObserver'in window)new IntersectionObserver(e=>{near=e[0].isIntersecting;f()}).observe(end);const f=()=>document.body.classList.toggle('show-cta',scrollY>620&&!near);addEventListener('scroll',f,{passive:true});f()})()</script>
+<script type="speculationrules">{"prerender":[{"where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":"/og/*"}}]},"eagerness":"moderate"}]}</script>
+<script>(()=>{if(matchMedia('(prefers-reduced-motion: reduce)').matches||!('IntersectionObserver'in window))return;const els=document.querySelectorAll('main section:not(.hero) .head, main .card, main .path, main .cases, main .plan, main .band, main section:not(.hero) .photo, .quote');const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{rootMargin:'0px 0px -6% 0px'});els.forEach(el=>{if(el.getBoundingClientRect().top>innerHeight*.92){el.classList.add('reveal');io.observe(el)}})})()</script>
 <script src="/chat.js" defer></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body></html>`
@@ -97,6 +99,9 @@ ${scan(src, 'Scan a room free', 'sm')}
 }
 
 // ---------- Home
+const examples = `<div class="cases">${EXAMPLES.map((e) => `<article class="case"><span class="dot ${e.dot}"></span><p class="eyebrow">${esc(e.where)}</p><h3>${esc(e.who)}</h3><p class="need">${esc(e.need)}</p><ul class="check">${e.does.map((d) => `<li>${esc(d)}</li>`).join('')}</ul><p class="result">${esc(e.result)}</p></article>`).join('')}</div>
+<p class="muted small" style="margin-top:16px">These are examples of how the service is used, not client stories. Real ones will replace them as we complete moves.</p>`
+const priceStrip = (src) => `<div class="grid3">${[['Free', 'Scan one room', 'See the list, the photos and a rough price.'], ['$29 a month', 'The whole home', 'Every room, family, sharing and the inventory PDF. Credited if you book.'], ['One flat price', 'A booked move', 'Confirmed from your own list before you approve anything.']].map(([p, t, d]) => `<div class="card"><div class="price" style="font-size:32px">${p}</div><h3>${t}</h3><p>${d}</p></div>`).join('')}</div><p style="margin-top:20px"><a href="/pricing">Full pricing and move price guides</a></p>`
 const paths = `<div class="grid2">
 <a class="path" href="/plan-ahead">${pic('ahead')}<div class="in"><p class="eyebrow">Planning ahead</p><h3>Not moving yet? Get it in order while it is easy.</h3><p>Scan at your own pace. Keep a photo record of the home, note who each thing is for, and have a price on file. When the day comes, the thinking is already done.</p><span class="link">Start my inventory</span></div></a>
 <a class="path" href="/moving-soon">${pic('soon')}<div class="in"><p class="eyebrow">Moving soon</p><h3>Date set? House sold? We are ready when you are.</h3><p>Scan this week, see a price in minutes, and book one crew for the packing, the move, the donations and the clear-out.</p><span class="link">Get my price</span></div></a></div>`
@@ -107,7 +112,7 @@ page('/', { src: 'home', og: 'default', title: `Downsizing help in Toronto | ${B
 <h1>Put a dot on it.<br>We do the rest.</h1>
 <p class="lead" style="margin-top:20px">A lifetime of things, sorted from your sofa. See everything you own in one list, decide where each piece belongs, and hand the heavy part to one Toronto crew.</p>
 <div class="cta">${scan('home-hero')}<a class="btn alt" href="/how-it-works">How it works</a></div>
-<p class="muted small" style="margin-top:14px">First room free. No card. Nothing to install.</p></div>
+<p class="muted small" style="margin-top:14px">First room free. No card. Nothing to install. About ten minutes.</p></div>
 <div class="hero-art">${pic('hero', 'tall', true)}<div class="float">${phone}</div></div></div></div></section>
 <section class="tight"><div class="wrap"><p class="quote">The hard part of downsizing is not the truck. It is the hundreds of small decisions that come before it.</p></div></section>
 <section class="soft"><div class="wrap"><div class="head"><p class="eyebrow">Two ways in</p><h2>Whether it is next month or some day.</h2></div>${paths}</div></section>
@@ -117,7 +122,9 @@ page('/', { src: 'home', og: 'default', title: `Downsizing help in Toronto | ${B
 <ol class="steps">${how.map(([t, p]) => `<li><h3>${t}</h3><p>${p}</p></li>`).join('')}</ol><p style="margin-top:22px"><a href="/how-it-works">See every step</a></p></div></div></div></section>
 <section><div class="wrap"><div class="head"><p class="eyebrow">Every thing gets a dot</p><h2>Eight colours. No arguments.</h2><p class="lead">Each colour is a destination. The crew works from the same list you made, so nothing meaningful ends up in the wrong pile.</p></div>
 <div class="grid4">${[['move', 'Move', 'Coming to the new home'], ['family', 'Family', 'Going to someone you name'], ['sell', 'Sell', 'Consignment or auction'], ['donate', 'Donate', 'To a charity that wants it'], ['store', 'Store', 'Into a storage unit'], ['junk', 'Dispose', 'Recycled or taken away'], ['keep', 'Keep', 'Staying in the home'], ['undecided', 'Not sure', 'Decide later']].map(([d, t, p]) => `<div class="card"><span class="dot ${d}"></span><h3>${t}</h3><p>${p}</p></div>`).join('')}</div></div></section>
-<section class="soft"><div class="wrap"><div class="head"><p class="eyebrow">Services</p><h2>Whatever is behind the move.</h2></div>${serviceCards('home')}</div></section>
+<section class="soft"><div class="wrap"><div class="head"><p class="eyebrow">Who it is for</p><h2>Five situations it was built around.</h2></div>${examples}</div></section>
+<section><div class="wrap"><div class="head"><p class="eyebrow">Services</p><h2>Whatever is behind the move.</h2></div>${serviceCards('home')}</div></section>
+<section class="soft"><div class="wrap"><div class="head"><p class="eyebrow">Pricing</p><h2>Start free. Pay only when it is useful.</h2></div>${priceStrip('home')}</div></section>
 <section><div class="wrap"><div class="grid2" style="align-items:center;gap:44px"><div class="head" style="margin:0"><p class="eyebrow">Yours to keep</p><h2>Useful even if you never book us.</h2><p class="lead">The inventory and the price are yours. Keep them on file, share them with family, take them to another mover. If you do book with us, what you paid for the app comes off the job.</p><div class="cta" style="margin-top:8px">${scan('home-value')}<a class="btn alt" href="/pricing">See pricing</a></div></div>
 <ul class="check">${['A photo inventory of every room, as a PDF', 'A price range built from your own list', 'Lists to send to family, charities and dealers', 'A helper can do the scanning for you', 'An assistant for quick answers, a person for everything else'].map((t) => `<li>${t}</li>`).join('')}</ul></div></div></section>
 <section class="soft"><div class="wrap"><div class="head"><p class="eyebrow">Where we work</p><h2>Toronto and the GTA.</h2></div>${areaChips}</div></section>
@@ -130,6 +137,7 @@ const audience = (path, o) => page(path, { src: o.src, og: o.src, crumbs: [[o.ey
 <section class="soft"><div class="wrap"><div class="head"><h2>${o.whyH}</h2></div><div class="grid3">${o.why.map(([t, p, d]) => `<div class="card"><span class="dot ${d}"></span><h3>${t}</h3><p>${p}</p></div>`).join('')}</div></div></section>
 <section><div class="wrap"><div class="grid2" style="align-items:center;gap:44px">${pic(o.photo2)}<div><div class="head" style="margin-bottom:22px"><h2>${o.stepsH}</h2></div><ol class="steps">${o.steps.map(([t, p]) => `<li><h3>${t}</h3><p>${p}</p></li>`).join('')}</ol></div></div></div></section>
 <section class="soft"><div class="wrap narrow"><div class="head"><h2>Questions</h2></div>${faqBlock(o.faq)}</div></section>
+<section><div class="wrap"><div class="head"><p class="eyebrow">Who it is for</p><h2>Situations it was built around.</h2></div>${examples}</div></section>
 ${band(`${o.src}-band`, o.bandH, o.bandP)}` })
 audience('/plan-ahead', { src: 'plan-ahead', photo: 'ahead', photo2: 'shelves', eyebrow: 'Planning ahead', cta: 'Start my inventory',
   title: 'Plan your downsizing before you need to', desc: 'Not moving yet? Make a photo inventory of your home, note who each thing is for, and keep a price on file. Ready whenever you are. First room free.',

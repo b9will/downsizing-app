@@ -109,3 +109,19 @@ details.menu{border:0;padding:0}
 }
 @media(prefers-reduced-motion:reduce){.sticky-cta,.chat-fab{transition:none}}
 .menu[open] summary::after{content:none}
+
+/* examples of use */
+.cases{display:grid;gap:14px;grid-auto-flow:column;grid-auto-columns:minmax(280px,84%);overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:10px;margin:0 -20px;padding-left:20px;padding-right:20px;scrollbar-width:thin}
+.case{scroll-snap-align:start;background:#fff;border-radius:var(--r);padding:24px;display:flex;flex-direction:column;gap:12px}section:not(.soft) .case{background:var(--soft)}
+.case .dot{width:44px;height:44px}.case h3{font-size:21px}.case .need{color:var(--ink2);font-size:16.5px}.case ul.check{gap:9px;font-size:16px}.case ul.check li::before{width:20px;height:20px;background-size:12px;margin-top:3px}
+.case .result{margin-top:auto;padding-top:14px;border-top:1px solid var(--line);font:600 17px 'Space Grotesk',sans-serif}
+@media(min-width:980px){.cases{grid-auto-flow:row;grid-template-columns:repeat(6,1fr);overflow:visible;margin:0;padding:0}.case{grid-column:span 2}.case:nth-child(4){grid-column:2/span 2}}
+/* motion: a soft cross-fade between pages and a small lift as things scroll in. Off for anyone who asks for less motion. */
+@view-transition{navigation:auto}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.16s;animation-timing-function:ease}
+@media(prefers-reduced-motion:no-preference){
+  main{animation:page-in .28s ease both}@keyframes page-in{from{opacity:0}to{opacity:1}}
+  .reveal{opacity:0;transform:translateY(12px);transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.2,1)}.reveal.in{opacity:1;transform:none}
+  .btn{transition:background-color .15s ease,transform .1s ease}.btn:active{transform:scale(.98)}
+  .photo img{transition:opacity .4s ease}
+}

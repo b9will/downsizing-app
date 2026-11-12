@@ -165,3 +165,18 @@ export const PHOTOS = {
   parlour: ['1760636803635-fe449cff950e', 'A bright room with vintage furniture and bookshelves'],
   loft: ['1698870157085-11632d2ddef8', 'A living room with large windows in evening light'],
 }
+
+// Illustrations of how the service is used. These are NOT client stories or reviews, and the page says so.
+// Replace each with a real, permissioned story (and photo) as jobs are completed.
+export const EXAMPLES = [
+  { dot: 'keep', who: 'A couple in their seventies, staying put for now', where: 'Bungalow in Etobicoke', need: 'They want their affairs in order without being rushed.',
+    does: ['Scan two rooms a week over a month', 'Note which pieces are meant for which grandchild', 'Keep the inventory and a price on file'], result: 'Nothing moves. Everything is decided.' },
+  { dot: 'family', who: 'A daughter in Vancouver, a mother moving to a residence', where: 'Family home in Oakville', need: 'She cannot be there, and three siblings all have opinions.',
+    does: ['A neighbour scans the house with an invite code', 'Siblings mark what they would like, from their phones', 'Mum makes the final call on every piece'], result: 'One list instead of forty phone calls.' },
+  { dot: 'store', who: 'An executor settling a parent\'s estate', where: 'House in Scarborough', need: 'The lawyer needs a record, and the house has to be emptied.',
+    does: ['A photo inventory PDF goes in the estate file', 'Family choices are recorded by name', 'Consignment, donation and disposal in one visit'], result: 'A documented, empty, broom-clean house.' },
+  { dot: 'move', who: 'A homeowner with a firm closing date', where: 'Four-bedroom in Mississauga', need: 'Thirty days to get from a full house to a two-bedroom condo.',
+    does: ['The whole home scanned in a weekend', 'A price range the same day, a flat price on approval', 'One crew packs, moves and clears'], result: 'Keys handed over on time.' },
+  { dot: 'sell', who: 'A downsizer with good furniture and no room for it', where: 'Condo move in North York', need: 'The dining suite and the art are worth something.',
+    does: ['Dealers get a link showing only the pieces for sale', 'They accept or pass from photos and sizes', 'What sells is credited against the move'], result: 'Good pieces find buyers instead of a bin.' },
+]
