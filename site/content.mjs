@@ -100,7 +100,7 @@ export const QUESTIONS = [
       ['Arranging partners: about a week', 'Charities and consignment houses need notice to review items and schedule pickups.'],
       ['Move and clear-out: one to three days', 'With the list settled, a crew can pack, move and clear a typical home quickly.'],
     ] },
-  { slug: 'senior-move-manager-vs-movers', q: 'What is the difference between a senior move manager and a moving company?',
+  { slug: 'senior-move-manager-vs-movers', title: 'Senior move manager vs moving company', q: 'What is the difference between a senior move manager and a moving company?',
     short: 'Movers carry things from one address to another. A move manager plans what should go, where it should go, and what happens to everything else.',
     parts: [
       ['What movers do', 'Load, drive, unload. Some also pack. They work from what you point at on the day.'],

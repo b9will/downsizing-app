@@ -1,5 +1,5 @@
 // Website assistant: a small chat panel. Answers come from the site-chat function, which only
-// talks about DOT and downsizing and has daily limits. Nothing typed here is stored by us.
+// talks about DOT and downsizing and has daily limits. Questions are saved without any visitor details.
 (() => {
   const URL_ = 'https://mcsnkmfyqvzpdfeffvzi.supabase.co/functions/v1/site-chat'
   const KEY = 'dot.chat.v1', MAX = 500
@@ -11,7 +11,7 @@
   fab.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Ask a question</span>'
   const panel = el('section', 'chat-panel'); panel.hidden = true; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Ask DOT a question')
   const head = el('header', 'chat-head')
-  head.innerHTML = '<div><b>Ask DOT</b><small>AI assistant. For anything else, <a href="/contact">talk to a person</a>.</small></div>'
+  head.innerHTML = '<div><b>Ask DOT</b><small>AI assistant. Questions are saved, without your details, to improve the site. Or <a href="/contact">talk to a person</a>.</small></div>'
   const close = el('button', 'chat-x', '×'); close.type = 'button'; close.setAttribute('aria-label', 'Close'); head.appendChild(close)
   const log = el('div', 'chat-log'); log.setAttribute('aria-live', 'polite')
   const chips = el('div', 'chat-chips')
@@ -43,7 +43,7 @@
     const wait = bubble('bot', '…')
     let reply = 'I could not reach the assistant. Please check your connection, or use the contact page to reach a person.'
     try {
-      const r = await fetch(URL_, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: msgs.slice(-8) }) })
+      const r = await fetch(URL_, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: msgs.slice(-8), page: location.pathname }) })
       const d = await r.json(); if (d.reply) reply = d.reply
     } catch { /* keep the fallback */ }
     wait.remove(); msgs.push({ role: 'assistant', content: reply })
