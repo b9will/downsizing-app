@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import { X, Zap, ImagePlus, Check } from 'lucide-react'
-import { Segmented, SetPicker, Sheet, TagChips, Toast } from '../components/ui'
+import { Dot, Segmented, SetPicker, Sheet, TagChips, Toast } from '../components/ui'
 import { ai } from '../lib/ai'
 import { snapshot, useCamera } from '../lib/camera'
 import { fileToDataUrl, useStore } from '../lib/hooks'
@@ -61,7 +61,7 @@ function track(prev: Tracked[], found: Match[], t: number): Tracked[] {
   }
   return next
 }
-type Draft = { photo: string; name: string; size: SizeClass; tag: Tag | null; recipient: string; qty: number }
+type Draft = { photo: string; name: string; size: SizeClass; tag: Tag | null; recipient: string; qty: number; label?: string }
 
 const SIZE_OPTS: Array<[SizeClass, string]> = [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large'], ['oversize', 'Huge']]
 
@@ -70,9 +70,15 @@ export default function Scan() {
   const nav = useNavigate()
   const job = useStore(() => store.getJob())
   const room = useStore(() => (job ? store.listRooms(job.id).find((r) => r.id === roomId) : undefined))
-  const count = useStore(() => (job && room ? store.listItems(job.id, room.id).length : 0))
+  const roomItems = useStore(() => (job && room ? store.listItems(job.id, room.id) : []))
+  const count = roomItems.length
+  // Scanner memory: what the camera called each thing we already tagged in this room, so it can wear its dot.
+  const memKey = `dot.scanmem.${roomId}`
+  const [mem, setMem] = useState<Array<{ id: string; label: string }>>(() => { try { return JSON.parse(localStorage.getItem(memKey) ?? '[]') } catch { return [] } })
+  const remember = (id: string, label: string) => setMem((all) => { const next = [...all, { id, label }].slice(-200); try { localStorage.setItem(memKey, JSON.stringify(next)) } catch { /* best effort */ } return next })
 
   const [draft, setDraft] = useState<Draft | null>(null)
+  const marks = useRef(new Map<string, Tag>()).current
   const { video, state, canWide, wideOn, toggleWide } = useCamera(!draft)
   const [live, setLive] = useState<Tracked[]>([])
   const [flash, setFlash] = useState(false)
@@ -130,7 +136,7 @@ export default function Scan() {
     const name = m?.name ?? ''
     const size = m?.size ?? itemCatalog.find((i) => i.name === name)?.size ?? ai.suggestTag(name)?.size ?? 'medium'
     const s = ai.suggestTag(name)
-    setDraft({ photo, name, size, tag: s && s.tag !== 'undecided' ? s.tag : null, recipient: '', qty: 1 })
+    setDraft({ photo, name, size, tag: s && s.tag !== 'undecided' ? s.tag : null, recipient: '', qty: 1, label: m?.name })
   }
 
   const shutter = (m?: Match) => {
@@ -141,7 +147,8 @@ export default function Scan() {
     setFlash(true); setTimeout(() => setFlash(false), 120)
     if (navigator.vibrate) navigator.vibrate(10)
     // Pick the centred detection if the user tapped the shutter rather than a box.
-    const pick = m ?? live.find((x) => x.centered) ?? live[0]
+    const fresh = live.filter((x) => !marks.has(x.key))
+    const pick = m ?? fresh.find((x) => x.centered) ?? fresh[0] ?? live.find((x) => x.centered) ?? live[0]
     startDraft(photo, pick)
   }
 
@@ -168,6 +175,7 @@ export default function Scan() {
     setErr('')
     if (navigator.vibrate) navigator.vibrate([10, 30, 10])
     setSaved({ id, name: draft.name.trim() })
+    remember(id, draft.label ?? draft.name.trim())
     setDraft(null)
   }
 
@@ -185,8 +193,10 @@ export default function Scan() {
       <AnimatePresence>{flash && <motion.div className="absolute inset-0 bg-white" initial={{ opacity: 0.9 }} animate={{ opacity: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />}</AnimatePresence>
 
       {/* Live boxes */}
+      {(() => { marks.clear(); const left = mem.map((x) => ({ label: x.label.toLowerCase(), item: roomItems.find((i) => i.id === x.id) })).filter((x) => x.item); [...live].sort((a, b) => a.key.localeCompare(b.key)).forEach((m) => { const k = left.findIndex((x) => x.label === m.name.toLowerCase()); if (k >= 0) { marks.set(m.key, left[k].item!.tag); left.splice(k, 1) } }); return null })()}
       <AnimatePresence>
         {!draft && live.map((m) => {
+          const done = marks.get(m.key)
           return (
           <motion.button
             key={m.key}
@@ -195,7 +205,8 @@ export default function Scan() {
             className={`absolute rounded-[22px] ${m.centered ? 'bg-white/20 shadow-[inset_0_0_0_2px_rgba(255,255,255,0.95),0_0_32px_rgba(255,255,255,0.35)]' : 'bg-white/10 shadow-[inset_0_0_0_1.5px_rgba(255,255,255,0.75)]'}`}
           >
             {(['left-0 top-0 border-l-4 border-t-4 rounded-tl-[22px]', 'right-0 top-0 border-r-4 border-t-4 rounded-tr-[22px]', 'left-0 bottom-0 border-l-4 border-b-4 rounded-bl-[22px]', 'right-0 bottom-0 border-r-4 border-b-4 rounded-br-[22px]'] as const).map((c) => <span key={c} aria-hidden className={`absolute w-7 h-7 border-white ${c}`} />)}
-            <span className="absolute left-1/2 -translate-x-1/2 -bottom-4 px-3.5 py-1 rounded-full bg-white text-ink text-[15px] font-semibold shadow-lg whitespace-nowrap">{m.name}</span>
+            {done && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 420, damping: 18 }} className="absolute left-1/2 top-1/2 -ml-[26px] -mt-[26px] rounded-full shadow-[0_0_0_4px_rgba(255,255,255,0.95),0_8px_24px_rgba(0,0,0,0.35)]"><Dot tag={done} size={52} /></motion.span>}
+            <span className="absolute left-1/2 -translate-x-1/2 -bottom-4 px-3.5 py-1 rounded-full bg-white text-ink text-[15px] font-semibold shadow-lg whitespace-nowrap">{m.name}{done ? ' · tagged' : ''}</span>
           </motion.button>
         )})}
       </AnimatePresence>
