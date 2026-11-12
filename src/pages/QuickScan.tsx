@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Check, ChevronLeft, X } from 'lucide-react'
 import { Dot, Segmented, SetPicker, TagChips } from '../components/ui'
 import { snapshot, useCamera } from '../lib/camera'
+import { Paywall } from '../components/Paywall'
+import { roomLocked } from '../lib/pay'
 import { useStore } from '../lib/hooks'
 import { now, store, uid } from '../lib/store'
 import { sb } from '../lib/supabase'
@@ -11,7 +13,7 @@ import { isSetLike, type Contents, type SizeClass, type Tag } from '../lib/types
 // Room quick scan: turn slowly, we photograph the whole room, the AI lists what is in it,
 // then one card per item: where does it go, and what about what's inside.
 type Found = { name: string; description: string; size: SizeClass; container: boolean; count?: number; contents_visible: string; prep: string; frame: number; box: number[]; confidence: number; photo: string }
-type Phase = 'intro' | 'scan' | 'working' | 'review' | 'done' | 'error'
+type Phase = 'intro' | 'scan' | 'working' | 'review' | 'done' | 'error' | 'paywall'
 
 const SECTORS = 12 // 30 degrees each
 const MAX_FRAMES = 24
@@ -56,6 +58,9 @@ export default function QuickScan() {
   const [askInside, setAskInside] = useState<null | 'ask' | 'what'>(null)
   const [saved, setSaved] = useState<Record<Tag, number>>({} as Record<Tag, number>)
   const [msg, setMsg] = useState('')
+  const [opened, setOpened] = useState(false)
+  const allRooms = useStore(() => (job ? store.listRooms(job.id) : []))
+  const allItems = useStore(() => (job ? store.listItems(job.id) : []))
 
   // Compass heading tells us which parts of the room have been covered.
   useEffect(() => {
@@ -91,6 +96,7 @@ export default function QuickScan() {
   }, [phase, state, video, hasCompass])
 
   if (!job || !room) return null
+  if (phase === 'paywall' || (roomLocked(job, allRooms, allItems, room.id) && !opened)) return <Paywall job={job} reason={phase === 'paywall' ? msg : undefined} back={`/rooms/${room.id}`} onOpen={() => { setOpened(true); setPhase('intro') }} />
 
   const start = async () => {
     // iPhones ask permission for motion sensors, and only from a tap.
@@ -103,10 +109,10 @@ export default function QuickScan() {
     if (frames.current.length < 3) { setMsg('Keep turning a little more first.'); return }
     setPhase('working'); setMsg('')
     try {
-      const { data, error } = await sb.functions.invoke('scan-room', { body: { room: room.name, frames: frames.current } })
+      const { data, error } = await sb.functions.invoke('scan-room', { body: { room: room.name, frames: frames.current, job_id: job.id, room_id: room.id } })
       if (error || !data?.items) {
         let m = data?.message as string | undefined
-        try { m ??= (await (error as { context?: Response })?.context?.json())?.message } catch { /* ignore */ }
+        try { const b = await (error as { context?: Response })?.context?.json(); m ??= b?.message; if (b?.error === 'paywall' || b?.error === 'different_room') { setMsg(m ?? ''); setPhase('paywall'); return } } catch { /* ignore */ }
         throw new Error(m ?? 'We could not read that scan. Check your signal and try again.')
       }
       const list: Found[] = []

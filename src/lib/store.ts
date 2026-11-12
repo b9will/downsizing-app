@@ -21,7 +21,7 @@ export const uid = () => crypto.randomUUID()
 export const now = () => new Date().toISOString()
 
 // Row mapping
-const jobFrom = (r: any): Job => ({ id: r.id, ownerId: r.owner_id, clientName: r.client_name, tier: r.tier, moveDate: r.move_date, tagDeadline: r.tag_deadline, status: r.status, stickerKit: r.sticker_kit, createdAt: r.created_at, details: r.details && Object.keys(r.details).length ? r.details : undefined })
+const jobFrom = (r: any): Job => ({ id: r.id, ownerId: r.owner_id, clientName: r.client_name, tier: r.tier, moveDate: r.move_date, tagDeadline: r.tag_deadline, status: r.status, stickerKit: r.sticker_kit, createdAt: r.created_at, details: r.details && Object.keys(r.details).length ? r.details : undefined, plan: r.plan ?? 'free', passUntil: r.pass_until ?? null, depositPaidAt: r.deposit_paid_at ?? null })
 const jobTo = (j: Job) => ({ id: j.id, owner_id: j.ownerId, client_name: j.clientName, tier: j.tier, move_date: j.moveDate || j.details?.moveDate || null, tag_deadline: j.tagDeadline, status: j.status, sticker_kit: j.stickerKit, details: j.details ?? {} })
 const roomFrom = (r: any): Room => ({ id: r.id, jobId: r.job_id, name: r.name, order: r.ord, done: r.done })
 const roomTo = (r: Room) => ({ id: r.id, job_id: r.jobId, name: r.name, ord: r.order, done: r.done })

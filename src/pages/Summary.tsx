@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Check, ChevronRight, Truck } from 'lucide-react'
 import { Dot, Page } from '../components/ui'
 import { ai } from '../lib/ai'
 import { useStore } from '../lib/hooks'
+import { startCheckout } from '../lib/pay'
 import { store } from '../lib/store'
 import { TAG_ORDER, type Job } from '../lib/types'
 import { detailsComplete } from './Details'
@@ -20,7 +22,16 @@ export default function Book() {
   const job = useStore(() => store.getJob())
   const rooms = useStore(() => (job ? store.listRooms(job.id) : []))
   const items = useStore(() => (job ? store.listItems(job.id) : []))
+  const [busy, setBusy] = useState(false)
+  const [payMsg, setPayMsg] = useState('')
   if (!job) return null
+  // Booking takes the $100 deposit on Stripe's page. If payments are not switched on yet, it books without one.
+  const book = async () => {
+    setBusy(true); setPayMsg('')
+    const r = await startCheckout('deposit', job)
+    setBusy(false)
+    if (r.off) store.saveJob({ ...job, status: 'review' }); else setPayMsg(r.message)
+  }
 
   const user = store.getUser()
   const isOwner = job.ownerId === user?.id
@@ -92,11 +103,11 @@ export default function Book() {
       {/* Sticky action bar, above the tab bar */}
       <div className="fixed inset-x-0 bottom-[calc(var(--spacing-safe-b)+64px)] z-20 bg-surface/95 backdrop-blur border-t border-line">
         <div className="max-w-xl mx-auto px-5 pt-3 pb-9">
-          {booked ? <p className="text-center font-semibold" role="status">Booked. We'll confirm the date and final price with you.</p>
+          {booked ? <p className="text-center font-semibold" role="status">{job.depositPaidAt ? 'Booked, deposit received.' : 'Booked.'} We'll confirm the date and final price with you.</p>
             : !isOwner ? <p className="text-center text-ink-2">{first} books the move.</p>
             : !ready ? <Link to="/details" className="btn">Add your phone and address to book</Link>
-            : <button className="btn" onClick={() => store.saveJob({ ...job, status: 'review' })}><Truck size={20} /> {when ? `Book ${when.split(', ').slice(1).join(', ') || when}` : 'Book my move'}</button>}
-          {!booked && isOwner && ready && <p className="text-ink-2 text-[13px] text-center mt-1.5">No payment today. We confirm the date and price first.</p>}
+            : <button className="btn" disabled={busy} onClick={book}><Truck size={20} /> {busy ? 'Opening secure payment…' : `${when ? `Book ${when.split(', ').slice(1).join(', ') || when}` : 'Book my move'} · $100 deposit`}</button>}
+          {!booked && isOwner && ready && <p className={`text-[13px] text-center mt-1.5 ${payMsg ? 'text-danger font-semibold' : 'text-ink-2'}`} role={payMsg ? 'alert' : undefined}>{payMsg || 'The deposit comes off your final price. We confirm the date with you.'}</p>}
         </div>
       </div>
     </Page>

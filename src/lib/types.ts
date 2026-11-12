@@ -53,6 +53,10 @@ export interface Job {
   stickerKit: boolean
   createdAt: string
   details?: JobDetails
+  /** Billing, set by the server only. */
+  plan?: 'free' | 'pass'
+  passUntil?: string | null
+  depositPaidAt?: string | null
 }
 export interface JobDetails {
   phone: string

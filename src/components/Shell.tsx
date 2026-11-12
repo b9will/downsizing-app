@@ -1,7 +1,9 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence } from 'motion/react'
 import { Home, LayoutGrid, ListChecks, Share, Truck, Check } from 'lucide-react'
 import { useStore } from '../lib/hooks'
+import { confirmPaid } from '../lib/pay'
 import { store } from '../lib/store'
 
 const side = [
@@ -14,11 +16,21 @@ const side = [
 
 export default function Shell() {
   const loc = useLocation()
+  const nav = useNavigate()
+  const [paid, setPaid] = useState('')
+  // Back from Stripe: confirm the payment with the server, then tidy the address bar.
+  useEffect(() => {
+    const id = new URLSearchParams(loc.search).get('paid')
+    if (!id) return
+    nav(loc.pathname, { replace: true })
+    void confirmPaid(id).then((r) => { setPaid(r.ok ? (r.kind === 'pass' ? 'Home pass is on. Every room is open.' : 'Deposit received. Your move is booked.') : r.message ?? ''); setTimeout(() => setPaid(''), 6000) })
+  }, [loc.search])
   const booked = useStore(() => { const s = store.getJob()?.status; return !!s && s !== 'tagging' })
   const helper = useStore(() => store.relation === 'scanner')
   const off = (label: string, Icon: typeof Home) => <span key={label} aria-disabled className="flex flex-col items-center justify-center gap-1 h-16 text-[13px] font-medium text-ink-3 opacity-40"><Icon size={22} strokeWidth={1.8} />{label}</span>
   return (
     <div className="min-h-full flex flex-col">
+      {paid && <div role="status" className="fixed inset-x-4 top-[calc(var(--spacing-safe-t)+12px)] z-40 max-w-xl mx-auto rounded-2xl bg-ink text-white font-semibold text-center px-4 py-3 shadow-lg">{paid}</div>}
       <main className="flex-1">
         <AnimatePresence mode="wait" initial={false}>
           <Outlet key={loc.pathname} />

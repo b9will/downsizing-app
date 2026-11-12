@@ -5,6 +5,8 @@ import { X, Zap, ImagePlus, Check } from 'lucide-react'
 import { Dot, Segmented, SetPicker, Sheet, TagChips, Toast } from '../components/ui'
 import { ai } from '../lib/ai'
 import { snapshot, useCamera } from '../lib/camera'
+import { Paywall } from '../components/Paywall'
+import { roomLocked } from '../lib/pay'
 import { fileToDataUrl, useStore } from '../lib/hooks'
 import { itemCatalog } from '../lib/itemCatalog'
 import { identifyItems } from '../lib/scan'
@@ -78,6 +80,9 @@ export default function Scan() {
   const remember = (id: string, label: string) => setMem((all) => { const next = [...all, { id, label }].slice(-200); try { localStorage.setItem(memKey, JSON.stringify(next)) } catch { /* best effort */ } return next })
 
   const [draft, setDraft] = useState<Draft | null>(null)
+  const [opened, setOpened] = useState(false)
+  const allRooms = useStore(() => (job ? store.listRooms(job.id) : []))
+  const allItems = useStore(() => (job ? store.listItems(job.id) : []))
   const marks = useRef(new Map<string, Tag>()).current
   const { video, state, canWide, wideOn, toggleWide } = useCamera(!draft)
   const [live, setLive] = useState<Tracked[]>([])
@@ -131,6 +136,7 @@ export default function Scan() {
   }, [saved])
 
   if (!job || !room) return null
+  if (roomLocked(job, allRooms, allItems, room.id) && !opened) return <Paywall job={job} back={`/rooms/${room.id}`} onOpen={() => setOpened(true)} />
 
   const startDraft = (photo: string, m?: Match) => {
     const name = m?.name ?? ''
