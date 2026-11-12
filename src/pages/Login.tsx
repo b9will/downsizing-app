@@ -9,6 +9,8 @@ export default function Login() {
   const nav = useNavigate()
   const [params] = useSearchParams()
   const next = params.get('next')?.startsWith('/') ? params.get('next')! : '/'
+  // Which website page sent them here ("area-etobicoke-hero"), kept so we can see what brings people in.
+  const src = (() => { try { const s = params.get('src'); if (s) localStorage.setItem('dot.src', s.slice(0, 80)); return localStorage.getItem('dot.src') ?? undefined } catch { return undefined } })()
   const [step, setStep] = useState<'email' | 'code' | 'password'>('email')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
@@ -22,7 +24,7 @@ export default function Login() {
     if (!name.trim()) return setError('Please enter your name.')
     if (!/.+@.+\..+/.test(email)) return setError('That email does not look right.')
     setError(''); setBusy(true)
-    const { error } = await sb.auth.signInWithOtp({ email: email.trim().toLowerCase(), options: { shouldCreateUser: true, data: { name: name.trim() }, emailRedirectTo: location.origin } })
+    const { error } = await sb.auth.signInWithOtp({ email: email.trim().toLowerCase(), options: { shouldCreateUser: true, data: { name: name.trim(), src }, emailRedirectTo: location.origin } })
     setBusy(false)
     if (error) return setError(/rate/i.test(error.message) ? 'Too many codes sent. Wait a minute and try again.' : error.message)
     setStep('code')
