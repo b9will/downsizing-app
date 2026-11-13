@@ -74,6 +74,8 @@ export interface JobDetails {
   consignment?: string
   storage?: string
   familyNotes?: string
+  /** Owner asked for added protection on their special care items. */
+  protection?: boolean
   mode?: JobMode
 }
 export const EMPTY_DETAILS: JobDetails = {
@@ -114,6 +116,10 @@ export interface Item {
   contents?: Contents
   /** How many identical pieces this entry covers (a set of 4 dining chairs = 4). */
   qty?: number
+  /** Flagged by the owner as valuable or fragile: custom packing, extra photos, signature on delivery. */
+  special?: boolean
+  /** What the owner says it is worth, in whole dollars. */
+  declaredValue?: number
   source?: 'manual' | 'quickscan' | 'sticker'
   createdAt: string
   updatedAt: string

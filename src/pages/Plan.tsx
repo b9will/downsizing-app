@@ -48,7 +48,7 @@ export default function Plan() {
     <button type="button" onClick={() => setEditing(i)} className="flex items-center gap-3 w-full text-left py-2 border-t border-line first:border-t-0">
       <div className="w-11 h-11 rounded-xl bg-surface overflow-hidden shrink-0">{i.photo && <img src={i.photo} alt="" className="w-full h-full object-cover" />}</div>
       <div className="flex-1 min-w-0">
-        <div className="font-medium text-[15px] truncate">{itemLabel(i)}</div>
+        <div className="font-medium text-[15px] truncate">{i.special ? '★ ' : ''}{itemLabel(i)}</div>
         <div className="text-ink-2 text-[14px] truncate">{i.description ? `${i.description} · ` : ''}{roomName(i.roomId)} · {SIZES[i.size].split(' (')[0]}{i.note ? ` · ${i.note}` : ''}</div>
       </div>
       <Pencil size={16} className="text-ink-3 shrink-0" />

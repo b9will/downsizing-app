@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Camera, ChevronLeft, Maximize2, X } from 'lucide-react'
+import { Camera, ChevronLeft, Maximize2, ShieldCheck, X } from 'lucide-react'
 import { Page, Segmented, SetPicker, TagChips } from '../components/ui'
 import { ai } from '../lib/ai'
+import { ASK_FIRST } from '../lib/care'
 import { fileToDataUrl } from '../lib/hooks'
 import { itemCatalog } from '../lib/itemCatalog'
 import { now, store, uid } from '../lib/store'
@@ -23,6 +24,8 @@ export default function ItemForm() {
   const [qty, setQty] = useState(existing?.qty ?? 1)
   const [recipient, setRecipient] = useState(existing?.familyRecipient ?? '')
   const [note, setNote] = useState(existing?.note ?? '')
+  const [special, setSpecial] = useState(!!existing?.special)
+  const [value, setValue] = useState(existing?.declaredValue ? String(existing.declaredValue) : '')
   const [photo, setPhoto] = useState(existing?.photo)
   const [viewing, setViewing] = useState(false)
   const file = useRef<HTMLInputElement>(null)
@@ -38,6 +41,7 @@ export default function ItemForm() {
     const item: Item = {
       ...existing,
       qty: qty > 1 ? qty : undefined,
+      special: special || undefined, declaredValue: special && Number(value) > 0 ? Math.round(Number(value)) : undefined,
       id: existing?.id ?? uid(), jobId: job.id, roomId: room.id, name: name.trim(), tag, size, photo, photoPath: photo === existing?.photo ? existing?.photoPath : undefined,
       note: note.trim() || undefined, familyRecipient: tag === 'family' ? recipient.trim() || undefined : undefined,
       sticker: existing?.sticker, status: existing?.status ?? 'tagged', statusNote: existing?.statusNote,
@@ -90,6 +94,20 @@ export default function ItemForm() {
           <TagChips value={tag} onChange={setTag} />
         </div>
         {tag === 'family' && <input className="input" placeholder="Who is it for?" value={recipient} onChange={(e) => setRecipient(e.target.value)} />}
+        <div className={`rounded-2xl p-4 ${special ? 'bg-surface-2' : 'border border-line'}`}>
+          <button type="button" role="switch" aria-checked={special} onClick={() => setSpecial(!special)} className="w-full flex items-center gap-3 text-left">
+            <ShieldCheck size={24} className={special ? 'text-accent' : 'text-ink-3'} />
+            <span className="flex-1"><b className="block font-semibold">Special care</b><span className="block text-ink-2 text-[14px]">Valuable, fragile or irreplaceable</span></span>
+            <span className={`w-12 h-7 rounded-full p-0.5 transition-colors ${special ? 'bg-accent' : 'bg-line'}`}><span className={`block w-6 h-6 rounded-full bg-white transition-transform ${special ? 'translate-x-5' : ''}`} /></span>
+          </button>
+          {special && (
+            <div className="mt-3">
+              <label className="eyebrow block mb-1" htmlFor="value">What is it worth? (optional)</label>
+              <div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-2">$</span><input id="value" className="input pl-8" inputMode="numeric" placeholder="e.g. 1200" value={value} onChange={(e) => setValue(e.target.value.replace(/[^0-9]/g, '').slice(0, 7))} /></div>
+              <p className="text-ink-2 text-[13px] mt-1.5">{Number(value) > ASK_FIRST ? 'For a piece like this, a person will call you to plan how it is packed and protected.' : 'We pack it by hand, photograph it at pickup and drop-off, and have someone sign for it.'}</p>
+            </div>
+          )}
+        </div>
         <textarea className="input py-3 h-auto min-h-24" placeholder="Anything we should know? (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
         <button className="btn" disabled={!name.trim() || !tag} onClick={save}>Save</button>
         {existing && <button className="btn btn-danger" onClick={remove}>Delete this item</button>}

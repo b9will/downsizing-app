@@ -81,7 +81,7 @@ export async function buildPdf(job: Job, rooms: Room[], items: Item[], s: Scope 
       doc.text(doc.splitTextToSize(txt(itemLabel(i)), tw)[0], tx, y + 5)
       grey(); doc.setFont('helvetica', 'normal').setFontSize(9.5)
       const meta = [i.description, SIZES[i.size].split(' (')[0], i.sticker ? `Sticker #${i.sticker}` : ''].filter(Boolean).join('  ·  ')
-      const extra = [i.tag === 'family' && i.familyRecipient ? `For ${i.familyRecipient}` : '', i.contents && i.contents !== 'none' ? `Contents: ${{ donate: 'donate', junk: 'dispose', leave: 'leave inside', family: 'to family', sort: 'to be sorted' }[i.contents]}` : '', i.prep ? `Before move day: ${i.prep}` : '', i.note ?? ''].filter(Boolean).join('  ·  ')
+      const extra = [i.special ? `Special care${i.declaredValue ? `, declared value $${i.declaredValue.toLocaleString('en-CA')}` : ''}` : '', i.tag === 'family' && i.familyRecipient ? `For ${i.familyRecipient}` : '', i.contents && i.contents !== 'none' ? `Contents: ${{ donate: 'donate', junk: 'dispose', leave: 'leave inside', family: 'to family', sort: 'to be sorted' }[i.contents]}` : '', i.prep ? `Before move day: ${i.prep}` : '', i.note ?? ''].filter(Boolean).join('  ·  ')
       const lines = [...doc.splitTextToSize(txt(meta), tw).slice(0, 1), ...doc.splitTextToSize(txt(extra), tw).slice(0, 2)]
       doc.text(lines, tx, y + 10.5, { lineHeightFactor: 1.3 })
       // Destination

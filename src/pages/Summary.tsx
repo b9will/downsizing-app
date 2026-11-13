@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Check, ChevronRight, Truck } from 'lucide-react'
+import { Check, ChevronRight, ShieldCheck, Truck } from 'lucide-react'
 import { Dot, Page } from '../components/ui'
 import { ai } from '../lib/ai'
+import { ASK_FIRST, careFor, PROTECTION_RATE } from '../lib/care'
 import { useStore } from '../lib/hooks'
 import { startCheckout } from '../lib/pay'
 import { store } from '../lib/store'
-import { TAG_ORDER, type Job } from '../lib/types'
+import { EMPTY_DETAILS, itemLabel, TAG_ORDER, type Job } from '../lib/types'
 import { destinationFor, detailsComplete } from './Details'
 
 const money = (n: number) => n.toLocaleString('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 })
@@ -39,6 +40,7 @@ export default function Book() {
   const ready = detailsComplete(job.details)
   const booked = job.status !== 'tagging'
   const q = ai.estimateQuote(job, items)
+  const care = careFor(items, job.details)
   const pieces = items.reduce((n, i) => n + (i.qty ?? 1), 0)
   const undecided = items.filter((i) => i.tag === 'undecided').length
   const when = niceDate(job.details?.moveDate || job.moveDate)
@@ -51,6 +53,7 @@ export default function Book() {
     ...(q.donationLoads ? ['Donation drop-off, with receipts'] : []),
     ...(q.junkLoads ? ['Disposal and recycling'] : []),
     ...(items.some((i) => i.tag === 'sell') ? ['Consignment pickup, proceeds to you'] : []),
+    ...(care ? [`Hand packing, photos and a signature for ${care.items.length} special care item${care.items.length === 1 ? '' : 's'}`] : []),
     ...(q.storageUnit ? [`Storage: ${q.storageUnit}`] : []),
     ...(job.tier === 'clear-move-settle' ? ['Unpacking, furniture placed, boxes taken away'] : []),
   ]
@@ -112,6 +115,26 @@ export default function Book() {
         {tags.some((c) => c.t === 'junk') && <div className="flex items-center gap-3 py-2.5"><Dot tag="junk" size={30} /><span className="flex-1"><b className="block font-semibold text-[15px]">Disposal</b><span className="block text-[14px] text-ink-2">Recycled where possible, the rest taken away</span></span></div>}
         <p className="text-ink-2 text-[13px] mt-2">{[job.details?.currentAddress?.split('\n')[0], when].filter(Boolean).join(' · ') || 'Add the home address and a move date in details.'}</p>
       </section>
+      {care && (
+        <section className="card">
+          <div className="flex items-center gap-2 mb-1"><ShieldCheck size={20} className="text-accent" /><div className="sec flex-1">Special care</div>{care.total > 0 && <span className="text-[14px] font-semibold tabular-nums">{money(care.total)} declared</span>}</div>
+          {care.items.map((i) => (
+            <Link key={i.id} to={`/items/${i.id}`} className="flex items-center gap-3 py-2.5 border-b border-line last:border-0">
+              {i.photo ? <img src={i.photo} alt="" className="w-11 h-11 rounded-xl object-cover bg-surface-2 shrink-0" /> : <Dot tag={i.tag} size={30} />}
+              <span className="flex-1 min-w-0"><b className="block font-semibold text-[15px] truncate">{itemLabel(i)}</b><span className="block text-[14px] text-ink-2">{!i.declaredValue ? 'Add a value' : i.declaredValue > ASK_FIRST ? 'We will call you about this one first' : `${money(i.declaredValue)} declared`}</span></span>
+              <ChevronRight size={18} className="text-ink-3" />
+            </Link>
+          ))}
+          {care.fee > 0 && (
+            <button type="button" role="switch" aria-checked={care.on} disabled={booked || !isOwner} onClick={() => store.saveJob({ ...job, details: { ...EMPTY_DETAILS, ...job.details, protection: !care.on } })} className={`w-full flex items-center gap-3 text-left rounded-2xl p-3.5 mt-3 ${care.on ? 'bg-ink text-white' : 'bg-surface-2'}`}>
+              <span className="flex-1"><b className="block font-semibold">Added protection {care.on ? 'on' : ''}</b><span className={`block text-[14px] ${care.on ? 'text-white/75' : 'text-ink-2'}`}>Covers {money(care.covered)} of declared value</span></span>
+              <span className="font-semibold tabular-nums">+ {money(care.fee)}</span>
+              <span className={`w-12 h-7 rounded-full p-0.5 ${care.on ? 'bg-white/30' : 'bg-line'}`}><span className={`block w-6 h-6 rounded-full bg-white transition-transform ${care.on ? 'translate-x-5' : ''}`} /></span>
+            </button>
+          )}
+          <p className="text-ink-2 text-[13px] mt-2">{care.fee > 0 ? `Estimate, about ${Math.round(PROTECTION_RATE * 100)}% of the value you declare. It is added to your flat price. ` : ''}This is not an insurance policy. The exact cost and terms are in your plan, and nothing is charged until you approve it.{care.askFirst.length ? ` Pieces over ${money(ASK_FIRST)} are planned with you by phone.` : ''}</p>
+        </section>
+      )}
       <Link to="/plan" className="card flex items-center gap-3 py-3"><span className="flex-1 font-semibold">See the full plan, room by room</span><ChevronRight size={18} className="text-ink-3" /></Link>
       {q.notes.length > 0 && <ul className="text-[14px] text-ink-2 list-disc pl-5 space-y-1">{q.notes.map((n) => <li key={n}>{n}</li>)}</ul>}
 
