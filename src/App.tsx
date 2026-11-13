@@ -57,7 +57,9 @@ function StaffOnly() {
   return isStaff(user) ? <Outlet /> : <Navigate to="/" replace />
 }
 function RequireCamera() {
-  return cameraGrantedBefore() ? <Outlet /> : <Navigate to="/setup" replace />
+  const loc = useLocation()
+  // Ask for the camera at the moment they first go to scan, then carry on to where they were going.
+  return cameraGrantedBefore() ? <Outlet /> : <Navigate to={`/setup?next=${encodeURIComponent(loc.pathname)}`} replace />
 }
 
 export default function App() {
@@ -79,9 +81,12 @@ export default function App() {
             <Route path="/crew/jobs/:jobId/enter" element={<StickerEntry />} />
           </Route>
           <Route element={<ClientOnly />}>
+            {/* Only the scanners need the camera. Everything else opens without asking for it. */}
             <Route element={<RequireCamera />}>
               <Route path="/rooms/:roomId/scan" element={<Scan />} />
               <Route path="/rooms/:roomId/quick" element={<QuickScan />} />
+            </Route>
+            <Route>
               <Route element={<Shell />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/rooms" element={<Rooms />} />

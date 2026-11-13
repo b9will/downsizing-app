@@ -47,7 +47,7 @@ export default function SharePage() {
     } catch (e) { console.error('share', e); setNote(kind === 'link' ? 'Could not make a link. Check your connection.' : 'That did not work. Please try again.') } finally { setBusy(null) }
   }
 
-  const cur = open === 'all' ? { key: 'all', scope: { kind: 'all' } as Scope, tag: null, title: 'Your full inventory', blurb: 'A record of the whole home: every photo, room by room, with where each thing is going.' } : people.find((p) => p.key === open)
+  const cur = open === 'all' ? { key: 'all', scope: { kind: 'all' } as Scope, tag: null, title: `${first}'s full inventory`, blurb: 'A record of the whole home: every photo, room by room, with where each thing is going.' } : people.find((p) => p.key === open)
   if (cur) {
     const list = itemsFor(items, cur.scope)
     const shots = list.filter((i) => i.photo).slice(0, 6)
@@ -82,7 +82,7 @@ export default function SharePage() {
       <h1>Who is it for?</h1>
       <button disabled={!items.length} onClick={() => setOpen('all')} className="flex items-center gap-3 p-4 rounded-[22px] bg-ink text-white text-left disabled:opacity-40">
         <span className="w-11 h-14 rounded-md bg-white text-ink flex items-center justify-center shrink-0"><FileText size={20} /></span>
-        <span className="flex-1"><b className="block text-[17px] font-semibold">Me: full inventory</b><span className="text-white/75 text-[14px]">PDF with every photo, {count({ kind: 'all' })} pieces</span></span>
+        <span className="flex-1"><b className="block text-[17px] font-semibold">{first}'s full inventory</b><span className="text-white/75 text-[14px]">PDF with every photo, {count({ kind: 'all' })} pieces</span></span>
         <ChevronRight size={20} />
       </button>
       <div className="grid grid-cols-2 gap-2.5">

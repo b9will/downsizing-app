@@ -45,7 +45,7 @@ export default function Join() {
       const u = store.getUser()
       if (u && !u.name) store.setUser({ ...u, name: name.trim() })
       await store.joinJob(code)
-      nav('/setup', { replace: true })
+      nav('/', { replace: true })
     } catch (e) { setErr((e as Error).message || 'That did not work. Please try again.') } finally { setBusy(false) }
   }
 

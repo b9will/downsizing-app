@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Camera } from 'lucide-react'
 import { Page } from '../components/ui'
 import { cameraSupported, requestCamera } from '../lib/camera'
@@ -7,6 +7,8 @@ import { cameraSupported, requestCamera } from '../lib/camera'
 // Asked once, right after sign-in, with a reason. iOS remembers the answer for this site.
 export default function CameraSetup() {
   const nav = useNavigate()
+  const [params] = useSearchParams()
+  const next = params.get('next')?.startsWith('/') ? params.get('next')! : '/'
   const [busy, setBusy] = useState(false)
   const [denied, setDenied] = useState(false)
   const supported = cameraSupported()
@@ -15,10 +17,10 @@ export default function CameraSetup() {
     setBusy(true)
     const ok = await requestCamera()
     setBusy(false)
-    if (ok) nav('/', { replace: true }); else setDenied(true)
+    if (ok) nav(next, { replace: true }); else setDenied(true)
   }
 
-  const skip = () => { try { localStorage.setItem('downsizing.cameraGranted', '1') } catch { /* ignore */ } nav('/', { replace: true }) }
+  const skip = () => { try { localStorage.setItem('downsizing.cameraGranted', '1') } catch { /* ignore */ } nav(next, { replace: true }) }
 
   return (
     <Page className="min-h-full flex flex-col justify-center">

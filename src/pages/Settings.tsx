@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Camera, ChevronLeft, ChevronRight, FileSpreadsheet, HardHat, LogOut, RotateCcw, Trash2, UserPlus } from 'lucide-react'
-import { Page, Sheet } from '../components/ui'
+import { Page, PdfReady, Sheet } from '../components/ui'
+import { makePdf, openPdf, sharePdf } from '../lib/pdf'
 import { cameraGrantedBefore, cameraSupported, requestCamera } from '../lib/camera'
-import { exportCsv } from '../lib/export'
 import { ExportSheet } from '../components/ExportSheet'
 import { useStore } from '../lib/hooks'
 import { resetJob, store, wipeAll } from '../lib/store'
@@ -26,6 +26,12 @@ export default function Settings() {
   const [cam, setCam] = useState<'allowed' | 'blocked' | 'unknown'>(cameraGrantedBefore() ? 'allowed' : 'unknown')
   const [danger, setDanger] = useState<Danger>(null)
   const [typed, setTyped] = useState('')
+  // Deleting is two steps: offer a copy to keep, then a typed confirmation.
+  const [step, setStep] = useState<'save' | 'confirm'>('save')
+  const [pdf, setPdf] = useState<File | null>(null)
+  const [saving, setSaving] = useState(false)
+  const startDanger = (d: 'reset' | 'delete') => { setDanger(d); setTyped(''); setPdf(null); setStep(items.length ? 'save' : 'confirm') }
+  const savePdf = async () => { if (!job) return; setSaving(true); try { setPdf(await makePdf(job, rooms, items)) } catch { setMsg('Could not make the PDF. You can still continue.') } finally { setSaving(false) } }
   const [msg, setMsg] = useState('')
   const [exporting, setExporting] = useState(false)
   const [invite, setInvite] = useState('')
@@ -78,12 +84,10 @@ export default function Settings() {
 
   const confirmDanger = async () => {
     if (danger === 'reset' && typed === 'RESET') {
-      try { await exportCsv(job, rooms, items) } catch { /* best effort backup */ }
       resetJob(job.id)
       setDanger(null); setTyped(''); nav('/', { replace: true })
     }
     if (danger === 'delete' && typed === 'DELETE') {
-      try { await exportCsv(job, rooms, items) } catch { /* best effort backup */ }
       await wipeAll()
     }
   }
@@ -147,8 +151,8 @@ export default function Settings() {
       <div className="eyebrow mb-2 px-1">Data</div>
       <div className="group mb-6">
         <Row onClick={() => setExporting(true)} icon={<FileSpreadsheet size={18} />} label="Export lists" value={`${items.length} items`} />
-        <Row onClick={() => { if (!locked) { setDanger('reset'); setTyped('') } else setMsg('This job is scheduled. Call us to make changes.') }} icon={<RotateCcw size={18} />} label="Start this job over" />
-        {isOwner && <Row onClick={() => { setDanger('delete'); setTyped('') }} icon={<Trash2 size={18} />} label="Cancel and delete this job" danger />}
+        <Row onClick={() => { if (!locked) startDanger('reset'); else setMsg('This job is scheduled. Call us to make changes.') }} icon={<RotateCcw size={18} />} label="Start this job over" />
+        {isOwner && <Row onClick={() => startDanger('delete')} icon={<Trash2 size={18} />} label="Cancel and delete this job" danger />}
       </div>
 
       <div className="eyebrow mb-2 px-1">About</div>
@@ -182,22 +186,33 @@ export default function Settings() {
             <button className="btn" disabled={typed.length < 6 || busy} onClick={claimCrew}>Switch to crew mode</button>
           </div>
         )}
-        {(danger === 'reset' || danger === 'delete') && (
+        {(danger === 'reset' || danger === 'delete') && step === 'save' && (
           <div>
-            <h2 className="mb-2">{danger === 'reset' ? 'Start this job over?' : 'Cancel this job?'}</h2>
-            <p className="text-ink-2 text-[15px] mb-1">
+            <h2 className="mb-2">Save a copy first?</h2>
+            <p className="text-ink-2 text-[16px] mb-4">{danger === 'reset' ? 'Starting over' : 'Deleting'} removes all {items.length} item{items.length === 1 ? '' : 's'} and their photos. A PDF keeps a record of everything, with pictures.</p>
+            {pdf ? (
+              <div className="mb-3"><PdfReady file={pdf} onShare={async () => { if (!(await sharePdf(pdf))) openPdf(pdf) }} onOpen={() => openPdf(pdf)} onClose={() => setStep('confirm')} /></div>
+            ) : (
+              <button className="btn mb-2" disabled={saving} onClick={savePdf}>{saving ? 'Making your PDF…' : 'Yes, save a PDF'}</button>
+            )}
+            <button className="btn btn-secondary text-danger" onClick={() => setStep('confirm')}>{pdf ? 'Continue' : 'No, continue without saving'}</button>
+            <button className="btn btn-ghost mt-1" onClick={() => setDanger(null)}>Keep everything</button>
+          </div>
+        )}
+        {(danger === 'reset' || danger === 'delete') && step === 'confirm' && (
+          <div>
+            <div className="rounded-2xl bg-[#fdecec] text-danger font-semibold px-4 py-3 mb-3" role="alert">This cannot be undone.</div>
+            <h2 className="mb-2">{danger === 'reset' ? 'Start this home over?' : 'Delete this home?'}</h2>
+            <p className="text-ink-2 text-[16px] mb-1">
               {danger === 'reset'
-                ? `This removes all ${items.length} tagged items and photos and gives you fresh rooms. Your name and details stay.`
-                : 'This cancels the job for everyone invited to it and signs you out.'}
+                ? `All ${items.length} items and photos are removed and you get fresh rooms. Your name and details stay.`
+                : 'The home, its items and photos are removed for everyone invited to it, and you are signed out.'}
             </p>
             {job.status !== 'tagging' && danger === 'delete' && <p className="text-ink-2 text-[15px] mb-1">If a date is booked, please also call us.</p>}
-            <p className="text-ink-2 text-[15px] mb-4">A spreadsheet backup is exported first.</p>
-            <label className="eyebrow block mb-1" htmlFor="confirm">Type {danger === 'reset' ? 'RESET' : 'DELETE'} to confirm</label>
-            <input id="confirm" className="input mb-3" autoCapitalize="characters" autoCorrect="off" value={typed} onChange={(e) => setTyped(e.target.value.toUpperCase())} />
-            <div className="grid grid-cols-2 gap-2">
-              <button className="btn btn-secondary" onClick={() => setDanger(null)}>Keep everything</button>
-              <button className={`btn ${danger === 'delete' ? 'bg-danger' : ''}`} disabled={typed !== (danger === 'reset' ? 'RESET' : 'DELETE')} onClick={confirmDanger}>{danger === 'reset' ? 'Start over' : 'Delete'}</button>
-            </div>
+            <label className="font-semibold text-[15px] block mt-4 mb-1" htmlFor="confirm">Type {danger === 'reset' ? 'RESET' : 'DELETE'} to confirm</label>
+            <input id="confirm" className="input mb-3 text-center text-[20px] tracking-[0.2em]" autoCapitalize="characters" autoCorrect="off" autoComplete="off" spellCheck={false} placeholder={danger === 'reset' ? 'RESET' : 'DELETE'} value={typed} onChange={(e) => setTyped(e.target.value.toUpperCase())} />
+            <button className="btn bg-danger mb-2" disabled={typed !== (danger === 'reset' ? 'RESET' : 'DELETE')} onClick={confirmDanger}>{danger === 'reset' ? 'Remove everything and start over' : 'Delete this home'}</button>
+            <button className="btn btn-secondary" onClick={() => setDanger(null)}>Keep everything</button>
           </div>
         )}
       </Sheet>

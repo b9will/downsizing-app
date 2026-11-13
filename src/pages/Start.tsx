@@ -27,7 +27,7 @@ export default function Start() {
   const start = (m: JobMode) => {
     if (m !== 'self' && !whose.trim()) return setErr(m === 'estate' ? 'Whose estate is it?' : 'Whose home is it?')
     createJob(user, m, m === 'self' ? user.name : m === 'estate' ? `Estate of ${whose.trim()}` : whose.trim())
-    nav('/setup', { replace: true })
+    nav('/', { replace: true })
   }
   const staff = async () => {
     setBusy(true); setErr('')
@@ -35,7 +35,7 @@ export default function Start() {
   }
   const join = async () => {
     setBusy(true); setErr('')
-    try { await store.joinJob(code); nav('/setup', { replace: true }) } catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
+    try { await store.joinJob(code); nav('/', { replace: true }) } catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
   }
 
   const Choice = ({ m, icon, title, body }: { m: JobMode | 'code' | 'staff'; icon: React.ReactNode; title: string; body: string }) => (

@@ -14,12 +14,32 @@ const constraints: MediaStreamConstraints = {
   video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
 }
 
-/** Request permission. Resolves true if granted; stops the probe stream immediately. */
+// Phones ask for camera permission whenever a page opens the camera afresh. So we open it once and keep
+// that stream warm between screens (scan, item, back to scan), closing it after a minute unused or when
+// the app goes to the background. Fewer opens means fewer prompts.
+let warm: { key: string; stream: MediaStream; timer?: ReturnType<typeof setTimeout> } | null = null
+const alive = (s: MediaStream) => s.getVideoTracks().some((t) => t.readyState === 'live')
+function dropWarm() { if (!warm) return; clearTimeout(warm.timer); warm.stream.getTracks().forEach((t) => t.stop()); warm = null }
+async function openCamera(key: string, c: MediaStreamConstraints): Promise<MediaStream> {
+  if (warm && warm.key === key && alive(warm.stream)) { clearTimeout(warm.timer); return warm.stream }
+  dropWarm() // a phone can only run one rear camera at a time
+  const stream = await navigator.mediaDevices.getUserMedia(c)
+  warm = { key, stream }
+  return stream
+}
+function releaseCamera(stream: MediaStream) {
+  if (!warm || warm.stream !== stream) { stream.getTracks().forEach((t) => t.stop()); return }
+  clearTimeout(warm.timer)
+  warm.timer = setTimeout(dropWarm, 60_000)
+}
+if (typeof document !== 'undefined') document.addEventListener('visibilitychange', () => { if (document.hidden && warm?.timer) dropWarm() })
+
+/** Request permission. Resolves true if granted. The stream is kept warm so the scanner can reuse it without asking again. */
 export async function requestCamera(): Promise<boolean> {
   if (!cameraSupported()) return false
   try {
-    const s = await navigator.mediaDevices.getUserMedia(constraints)
-    s.getTracks().forEach((t) => t.stop())
+    const s = await openCamera('main', constraints)
+    releaseCamera(s)
     try { localStorage.setItem(KEY, '1') } catch { /* ignore */ }
     return true
   } catch {
@@ -51,9 +71,9 @@ export function useCamera(active: boolean, opts: { preferWide?: boolean } = {}) 
     let on = true
     setState((s) => (s === 'live' ? s : 'starting'))
     const c: MediaStreamConstraints = deviceId ? { audio: false, video: { deviceId: { exact: deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } } } : constraints
-    navigator.mediaDevices.getUserMedia(c)
+    openCamera(deviceId ?? 'main', c)
       .then(async (s) => {
-        if (!on) { s.getTracks().forEach((t) => t.stop()); return }
+        if (!on) { releaseCamera(s); return }
         stream = s
         const v = video.current
         if (!v) return
@@ -68,6 +88,7 @@ export function useCamera(active: boolean, opts: { preferWide?: boolean } = {}) 
           const w: Wide = { kind: 'zoom', min: caps.zoom.min }
           setWide(w)
           if (wantWide.current) { wantWide.current = false; try { await t.applyConstraints({ advanced: [{ zoom: w.min } as MediaTrackConstraintSet] }); setWideOn(true) } catch { /* stay at 1x */ } }
+          else { try { await t.applyConstraints({ advanced: [{ zoom: 1 } as MediaTrackConstraintSet] }) } catch { /* a reused stream may still be zoomed out; harmless */ } }
           return
         }
         // 2. Otherwise look for a separate ultra-wide camera.
@@ -80,7 +101,7 @@ export function useCamera(active: boolean, opts: { preferWide?: boolean } = {}) 
       .catch(() => { if (on) { if (deviceId) setWideOn(false); else setState('denied') } })
     return () => {
       on = false
-      stream?.getTracks().forEach((t) => t.stop())
+      if (stream) releaseCamera(stream)
       if (video.current) video.current.srcObject = null
     }
   }, [active, deviceId])
