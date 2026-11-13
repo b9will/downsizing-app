@@ -43,7 +43,7 @@ const SECTIONS: Section[] = [
   ] },
 ]
 
-export const REQUIRED: Array<keyof JobDetails> = ['phone', 'currentAddress']
+export const REQUIRED: Array<'phone' | 'currentAddress'> = ['phone', 'currentAddress']
 export const detailsComplete = (d?: JobDetails) => REQUIRED.every((k) => (d?.[k] ?? '').trim().length > 0)
 /** What to show for each destination on other screens: the saved place, or nothing yet. */
 export const destinationFor = (d: JobDetails | undefined, tag: Tag): string => {
@@ -94,7 +94,7 @@ export default function Details() {
                 {s.fields.map((f) => (
                   <div key={f.key}>
                     <label className="block font-medium text-[15px] mb-1" htmlFor={f.key}>
-                      {f.label}{REQUIRED.includes(f.key) && <span className="text-ink-2 font-normal"> (needed to book)</span>}
+                      {f.label}{(REQUIRED as string[]).includes(f.key) && <span className="text-ink-2 font-normal"> (needed to book)</span>}
                     </label>
                     {f.textarea
                       ? <textarea id={f.key} className="input py-3 h-auto min-h-20 bg-surface" placeholder={f.placeholder} value={d[f.key] ?? ''} onChange={set(f.key)} />
