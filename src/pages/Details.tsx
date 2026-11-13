@@ -8,7 +8,7 @@ import { store } from '../lib/store'
 import { EMPTY_DETAILS, type Item, type JobDetails, type Tag } from '../lib/types'
 
 // Everything about the move that is not an item: how to reach them, the home, and where each colour is headed.
-type Field = { key: keyof JobDetails; label: string; type?: string; hint?: string; textarea?: boolean; placeholder?: string }
+type Field = { key: Exclude<keyof JobDetails, 'protection' | 'mode'>; label: string; type?: string; hint?: string; textarea?: boolean; placeholder?: string }
 type Section = { id: string; title: string; tag?: Tag; blurb?: string; fields: Field[] }
 const SECTIONS: Section[] = [
   { id: 'you', title: 'You', fields: [
