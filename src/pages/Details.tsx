@@ -23,15 +23,15 @@ const SECTIONS: Section[] = [
   { id: 'move', title: 'Moving to', tag: 'move', blurb: 'Where the blue dots are going.', fields: [
     { key: 'newAddress', label: 'New address', textarea: true, hint: 'A residence name and suite number is fine. Leave blank if nothing is moving.' },
   ] },
-  { id: 'donate', title: 'Donations', tag: 'donate', blurb: 'Where the yellow dots are going.', fields: [
-    { key: 'charity', label: 'Charity you would like to give to', hint: 'Leave blank and we will suggest one that takes what you have.' },
+  { id: 'donate', title: 'Donations', tag: 'donate', blurb: 'Where the yellow dots are going. Our crew delivers them for you.', fields: [
+    { key: 'charity', label: 'Charity you would like to give to', hint: 'Any GTA charity that takes drop-offs. Leave blank and we will suggest one that takes what you have. Tax receipts come from the charity.' },
     { key: 'charityAddress', label: 'Drop-off location or pickup details', textarea: true },
   ] },
   { id: 'sell', title: 'Selling', tag: 'sell', blurb: 'Where the orange dots are going.', fields: [
     { key: 'consignment', label: 'Consignment house, auction or dealer', textarea: true, hint: 'Leave blank and we will arrange one. Anything sold is credited back to you.' },
   ] },
-  { id: 'store', title: 'Storage', tag: 'store', blurb: 'Where the black dots are going.', fields: [
-    { key: 'storage', label: 'Storage facility and unit', textarea: true, hint: 'Leave blank if you need us to find a unit.' },
+  { id: 'store', title: 'Storage', tag: 'store', blurb: 'Where the black dots are going. Our crew delivers into your unit.', fields: [
+    { key: 'storage', label: 'Storage facility and unit', textarea: true, hint: 'You rent the unit in your own name. Not booked yet? Leave this blank and we will suggest a facility near you.' },
   ] },
   { id: 'family', title: 'Family items', tag: 'family', blurb: 'How the purple dots get to their people.', fields: [
     { key: 'familyNotes', label: 'Pickup or delivery plans', textarea: true, placeholder: 'Sarah is collecting on Saturday. The clock goes to David in Ottawa.' },
