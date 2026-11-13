@@ -7,7 +7,7 @@ import { useStore } from '../lib/hooks'
 import { startCheckout } from '../lib/pay'
 import { store } from '../lib/store'
 import { TAG_ORDER, type Job } from '../lib/types'
-import { detailsComplete } from './Details'
+import { destinationFor, detailsComplete } from './Details'
 
 const money = (n: number) => n.toLocaleString('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 })
 const TIERS: Array<[Job['tier'], string, string]> = [
@@ -97,6 +97,21 @@ export default function Book() {
       </ul>
 
       {undecided > 0 && <Link to="/sort" className="card flex items-center gap-3 py-3"><Dot tag="undecided" size={30} /><span className="flex-1"><b className="block font-semibold">{undecided} item{undecided === 1 ? '' : 's'} still to sort</b><span className="text-ink-2 text-[14px]">The price firms up as you decide</span></span><ChevronRight size={18} className="text-ink-3" /></Link>}
+      <section className="card">
+        <div className="flex items-baseline justify-between mb-1"><div className="sec">Where everything goes</div><Link to="/details" className="text-[14px] font-semibold underline">Edit details</Link></div>
+        {(['move', 'family', 'sell', 'donate', 'store'] as const).filter((t) => tags.some((c) => c.t === t)).map((t) => {
+          const where = destinationFor(job.details, t) || (t === 'store' && q.storageUnit ? `You will need about a ${q.storageUnit}` : '')
+          return (
+            <Link key={t} to={`/details#${t}`} className="flex items-center gap-3 py-2.5 border-b border-line last:border-0">
+              <Dot tag={t} size={30} />
+              <span className="flex-1 min-w-0"><b className="block font-semibold text-[15px]">{{ move: 'Moving to', family: 'Family items', sell: 'Selling through', donate: 'Donating to', store: 'Storing at' }[t]}</b><span className={`block text-[14px] truncate ${where ? 'text-ink-2' : 'text-ink-3'}`}>{where || (t === 'move' ? 'Add the new address' : t === 'family' ? 'Add pickup plans' : 'We will arrange it, or add your own')}</span></span>
+              <ChevronRight size={18} className="text-ink-3" />
+            </Link>
+          )
+        })}
+        {tags.some((c) => c.t === 'junk') && <div className="flex items-center gap-3 py-2.5"><Dot tag="junk" size={30} /><span className="flex-1"><b className="block font-semibold text-[15px]">Disposal</b><span className="block text-[14px] text-ink-2">Recycled where possible, the rest taken away</span></span></div>}
+        <p className="text-ink-2 text-[13px] mt-2">{[job.details?.currentAddress?.split('\n')[0], when].filter(Boolean).join(' · ') || 'Add the home address and a move date in details.'}</p>
+      </section>
       <Link to="/plan" className="card flex items-center gap-3 py-3"><span className="flex-1 font-semibold">See the full plan, room by room</span><ChevronRight size={18} className="text-ink-3" /></Link>
       {q.notes.length > 0 && <ul className="text-[14px] text-ink-2 list-disc pl-5 space-y-1">{q.notes.map((n) => <li key={n}>{n}</li>)}</ul>}
 

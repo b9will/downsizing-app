@@ -36,6 +36,27 @@ const CREW_LOAD_PER_HOUR = 12 // items an average mover handles per hour, incl. 
 
 const SIZE_UNITS: Record<SizeClass, number> = { small: 1, medium: 4, large: 12, oversize: 30 }
 
+// Storage sizing. Rough space each size of item takes once packed (cubic feet), and how much a unit
+// really holds: about 65% of its volume at an 8 ft ceiling, because furniture does not stack perfectly.
+// These are planning figures to choose a unit by, not measurements.
+const CUBIC_FT: Record<SizeClass, number> = { small: 3, medium: 12, large: 45, oversize: 90 }
+const UNITS: Array<{ name: string; holds: number; like: string }> = [
+  { name: '5 x 5', holds: 130, like: 'a hall closet' },
+  { name: '5 x 10', holds: 260, like: 'a walk-in closet' },
+  { name: '10 x 10', holds: 520, like: 'half a single garage' },
+  { name: '10 x 15', holds: 780, like: 'a large bedroom' },
+  { name: '10 x 20', holds: 1040, like: 'a single garage' },
+]
+export type StorageEstimate = { pieces: number; cubicFeet: number; unit: string; like: string; fill: number; tooBig: boolean }
+/** Which storage unit the items marked Store would need. Null when nothing is going to storage. */
+export function storageFor(items: Item[]): StorageEstimate | null {
+  const list = items.filter((i) => i.tag === 'store')
+  if (!list.length) return null
+  const cubicFeet = Math.round(list.reduce((s, i) => s + CUBIC_FT[i.size] * (i.qty ?? 1), 0))
+  const u = UNITS.find((x) => cubicFeet <= x.holds) ?? UNITS[UNITS.length - 1]
+  return { pieces: list.reduce((n, i) => n + (i.qty ?? 1), 0), cubicFeet, unit: u.name, like: u.like, fill: Math.min(1, cubicFeet / u.holds), tooBig: cubicFeet > u.holds }
+}
+
 export const localAI: AIProvider = {
   suggestTag(name) {
     const n = name.trim()
@@ -102,7 +123,8 @@ export const localAI: AIProvider = {
     const crew = totalUnits < 60 ? 2 : totalUnits < 200 ? 3 : totalUnits < 400 ? 4 : 5
     const hours = Math.max(3, Math.ceil(handled / (CREW_LOAD_PER_HOUR * crew)) + 2)
 
-    const storageUnit = storeUnits === 0 ? null : storeUnits < 40 ? '5 x 5 locker' : storeUnits < 100 ? '5 x 10 unit' : storeUnits < 200 ? '10 x 10 unit' : '10 x 15 unit'
+    const st = storageFor(items)
+    const storageUnit = st ? `${st.unit} unit${st.tooBig ? ' or larger' : ''}` : null
     const donationLoads = donateUnits === 0 ? 0 : Math.ceil(donateUnits / 120)
     const junkLoads = junkUnits === 0 ? 0 : Math.ceil(junkUnits / 120)
 

@@ -70,6 +70,10 @@ export interface JobDetails {
   charity: string
   charityAddress: string
   accessNotes: string
+  /** Where the other colours are headed. Optional: blank means we arrange it. */
+  consignment?: string
+  storage?: string
+  familyNotes?: string
   mode?: JobMode
 }
 export const EMPTY_DETAILS: JobDetails = {
